@@ -1,0 +1,328 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AkiraComputer - Tu tienda de tecnología</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+    <!-- Include Header -->
+    <div th:replace="~{header :: header}"></div>
+
+
+	<!-- Category Section -->
+	<section class="category-section">
+	    <div class="container">
+	        <div class="row">
+	            <div class="col-lg-6">
+					<a th:href="@{/categorias}">
+						<div class="category-card">
+							<img th:src="@{/images/empresa_1.jpg}" alt="" class="category-image">
+                           <h3>Categoría de Productos</h3>
+                       </div>
+					</a>
+	            </div>
+	            <div class="col-lg-6">
+					<a th:href="@{/armar-pc}">
+						<div class="category-card">
+                             <img th:src="@{/images/empresa_2.webp}" alt="" class="category-image">
+                            <h3>Arma tu PC</h3>
+                        </div>
+					</a>
+	            </div>
+	        </div>
+	    </div>
+	</section>
+
+	
+    <!-- Categorías Destacadas -->
+    <section class="featured-categories">
+        <div class="container">
+            <h2 class="section-title text-center mb-5">Explora nuestras categorías</h2>
+			<div class="category-grid">
+			                <div th:each="categoria : ${categorias}" class="category-card">
+			                    <a th:href="@{/categoria/{id}(id=${categoria.id})}" class="text-decoration-none">
+			                        <!-- Imagen de la categoría -->
+			                        <div th:if="${categoria.imagenUrl}" class="category-image-container">
+			                            <img th:src="@{${categoria.imagenUrl}}" 
+			                                 th:alt="${categoria.nombre}" 
+			                                 class="category-image"
+			                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+			                            <!-- Fallback si no se puede cargar la imagen -->
+			                            <div class="category-fallback" style="display: none;">
+			                                <i class="fas fa-microchip"></i>
+			                            </div>
+			                        </div>
+			                        
+			                        <!-- Fallback si no hay URL de imagen -->
+			                        <div th:unless="${categoria.imagenUrl}" class="category-fallback">
+			                            <i class="fas fa-microchip"></i>
+			                        </div>
+			                        
+			                        <!-- Overlay con información -->
+			                        <div class="category-overlay">
+			                            <h3 class="category-title" th:text="${categoria.nombre}">CATEGORÍA</h3>
+			                            <p class="category-description" th:text="${categoria.descripcion}">Descripción de la categoría</p>
+			                            <div class="category-info">
+			                                <small th:if="${categoria.estante}" class="badge bg-light text-dark">
+			                                    <i class="fas fa-map-marker-alt me-1"></i>
+			                                    Estante: <span th:text="${categoria.estante}">A1</span>
+			                                </small>
+			                            </div>
+			                        </div>
+			                    </a>
+			                </div>
+			            </div>
+			
+            <div class="text-center mt-4">
+                <a href="/categorias" class="btn btn-outline-primary">
+                    <i class="fas fa-th-large me-2"></i>Ver todas las categorías
+                </a>
+            </div>
+        </div>
+    </section>
+	
+
+	<!-- Business Section -->
+	<section class="business-section">
+	    <div class="container">
+	        <h2 class="text-center mb-4">Todo Para Tu Empresa</h2>
+	        <div class="row">
+	            <div class="col-lg-4 mb-4">
+	                <div class="business-card">
+	                    <!-- REEMPLAZAR: /images/business1.jpg -->
+	                    <img src="/images/empresa_1.jpg" alt="Todo lo que necesitas para tu empresa" class="img-fluid mb-3">
+	                    <h3>TODO EN GAMMING PARA TU COMODIDAD A TU ESTILO DE VIDA</h3>
+						<a th:href="@{/categorias}">VER MÁS</a>
+	                </div>
+	            </div>
+	            
+	            <div class="col-lg-4 mb-4">
+	                <div class="business-card">
+	                    <h3>¿ERES EMPRESA?</h3>
+	                    <!-- REEMPLAZAR: /images/business2.jpg -->
+	                    <img src="/images/empresa_2.webp" alt="¿Eres empresa?" class="img-fluid mb-3">
+	                    <p>Lo necesario para tu empresa siga al ritmo de la tecnología</p>
+						<a th:href="@{/categorias}">CONOCE MÁS</a>
+	                </div>
+	            </div>
+	            
+	            <div class="col-lg-4 mb-4">
+	                <div class="business-card">
+	                    <!-- REEMPLAZAR: /images/business3.jpg -->
+	                    <img src="/images/empresa_3.jpg" alt="Todo lo que necesitas para tu empresa" class="img-fluid mb-3">
+	                    <p>¿Buscas comodidad? laptops de mayor comodidad y calidad</p>
+	                    <a th:href="@{/categorias}">VER MÁS</a>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</section>
+
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+        <div class="container">
+
+			<br />
+			<br />
+            <div class="row">
+			<br />
+			<br />
+			<br />
+			<br />
+                <div class="col-md-6 mb-4">
+                    <div class="cta-card">
+                        <div class="cta-icon">
+                            <i class="fas fa-desktop"></i>
+                        </div>
+                        <h3>¿Necesitas una PC personalizada?</h3>
+                        <p>Te ayudamos a seleccionar los mejores componentes para tu presupuesto y necesidades</p>
+                        <a href="/armar-pc" class="btn btn-primary">
+                            <i class="fas fa-tools me-2"></i>Armar mi PC
+                        </a>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-4">
+                    <div class="cta-card">
+                        <div class="cta-icon">
+                            <i class="fas fa-user-circle"></i>
+                        </div>
+                        <h3>¿Eres cliente nuevo?</h3>
+                        <p>Regístrate para hacer seguimiento a tus pedidos y recibir ofertas exclusivas</p>
+                        <div th:if="${clienteLogueado == null}">
+                            <button class="btn btn-success" onclick="mostrarModalRegistro()">
+                                <i class="fas fa-user-plus me-2"></i>Registrarse
+                            </button>
+                        </div>
+                        <div th:if="${clienteLogueado != null}">
+                            <a th:href="@{/cliente-dashboard/{dni}(dni=${clienteLogueado.dni})}" class="btn btn-info">
+                                <i class="fas fa-user me-2"></i>Mi Dashboard
+                            </a>
+                        </div>
+                    </div>
+                </div>
+				<br /><br />
+            </div>
+
+			<br />
+			<br />
+        </div>
+    </section>
+
+    <!-- Modal de Registro de Cliente -->
+    <div class="modal fade" id="registroClienteModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Registro de Cliente</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="registroClienteForm">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">DNI *</label>
+                                    <input type="text" class="form-control" id="regDni" required maxlength="8">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Usuario *</label>
+                                    <input type="text" class="form-control" id="regUsuario" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Nombre *</label>
+                                    <input type="text" class="form-control" id="regNombre" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Apellido *</label>
+                                    <input type="text" class="form-control" id="regApellido" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Correo *</label>
+                                    <input type="email" class="form-control" id="regCorreo" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Celular</label>
+                                    <input type="text" class="form-control" id="regCelular">
+                                </div>
+                            </div>
+                            <div class="col-12">
+                                <div class="mb-3">
+                                    <label class="form-label">Dirección</label>
+                                    <input type="text" class="form-control" id="regDireccion">
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Contraseña *</label>
+                                    <input type="password" class="form-control" id="regPassword" required>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label class="form-label">Confirmar Contraseña *</label>
+                                    <input type="password" class="form-control" id="regPasswordConfirm" required>
+                                </div>
+                            </div>
+                        </div>
+                        <div id="registroAlert"></div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="registrarCliente()">
+                        <i class="fas fa-user-plus me-2"></i>Registrar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+
+    <script>
+        function mostrarModalRegistro() {
+            new bootstrap.Modal(document.getElementById('registroClienteModal')).show();
+        }
+
+        function registrarCliente() {
+            const dni = document.getElementById('regDni').value.trim();
+            const usuario = document.getElementById('regUsuario').value.trim();
+            const nombre = document.getElementById('regNombre').value.trim();
+            const apellido = document.getElementById('regApellido').value.trim();
+            const correo = document.getElementById('regCorreo').value.trim();
+            const celular = document.getElementById('regCelular').value.trim();
+            const direccion = document.getElementById('regDireccion').value.trim();
+            const password = document.getElementById('regPassword').value;
+            const passwordConfirm = document.getElementById('regPasswordConfirm').value;
+
+            // Validaciones
+            if (!dni || !usuario || !nombre || !apellido || !correo || !password) {
+                mostrarAlerta('Todos los campos marcados con * son obligatorios', 'warning');
+                return;
+            }
+
+            if (dni.length !== 8 || !/^\d+$/.test(dni)) {
+                mostrarAlerta('El DNI debe tener 8 dígitos', 'warning');
+                return;
+            }
+
+            if (password !== passwordConfirm) {
+                mostrarAlerta('Las contraseñas no coinciden', 'warning');
+                return;
+            }
+
+            // Enviar datos
+            fetch('/auth/registro-cliente', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    dni, usuario, nombre, apellido, correo, celular, direccion, password
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    mostrarAlerta('Cliente registrado exitosamente', 'success');
+                    setTimeout(() => {
+                        window.location.href = data.redirectUrl;
+                    }, 1500);
+                } else {
+                    mostrarAlerta(data.message, 'danger');
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                mostrarAlerta('Error de conexión', 'danger');
+            });
+        }
+
+        function mostrarAlerta(mensaje, tipo) {
+            const alertContainer = document.getElementById('registroAlert');
+            alertContainer.innerHTML = `
+                <div class="alert alert-${tipo} alert-dismissible fade show" role="alert">
+                    ${mensaje}
+                    <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+                </div>
+            `;
+        }
+    </script>
+</body>
+</html>

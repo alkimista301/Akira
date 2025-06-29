@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Armar Mi PC - AkiraComputer</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- CSS personalizado -->
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+   
+</head>
+
+<body>
+    <!-- Header -->
+    <div th:replace="~{header :: header}"></div>
+
+    <!-- Arma PC Section -->
+    <section class="arma-pc-section">
+        <div class="container">
+            <!-- Header Banner -->
+            <div class="header-banner">
+                <h1 class="header-title">Arma tu PC</h1>
+                <i class="fas fa-microchip header-icon"></i>
+                <p class="lead">Selecciona componentes por categoría para armar tu PC ideal</p>
+            </div>
+            
+            <div class="row">
+                <!-- PC Builder Container -->
+                <div class="col-lg-8">
+                    <div class="pc-builder-container">
+                        <!-- Verificar si cliente está logueado -->
+                        <div th:if="${clienteLogueado == null}" class="login-required mb-4">
+                            <h5><i class="fas fa-exclamation-triangle text-warning me-2"></i>Se requiere iniciar sesión</h5>
+                            <p>Para armar tu PC y realizar pedidos, necesitas estar registrado e iniciar sesión como cliente.</p>
+                            <div class="mt-3">
+                                <button type="button" class="btn btn-primary me-2" data-bs-toggle="modal" data-bs-target="#loginModal">
+                                    <i class="fas fa-sign-in-alt me-1"></i>Iniciar Sesión
+                                </button>
+                                <button type="button" class="btn btn-outline-primary" data-bs-toggle="modal" data-bs-target="#registroClienteModal">
+                                    <i class="fas fa-user-plus me-1"></i>Registrarse
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Instrucciones -->
+                        <div class="alert alert-info">
+                            <div class="d-flex align-items-center">
+                                <i class="fas fa-info-circle me-2"></i>
+                                <div class="flex-grow-1">
+                                    <strong>¿Cómo funciona?</strong> Selecciona un componente de cada categoría que necesites. 
+                                    Los productos se agregarán al carrito con el indicador "Armar PC".
+                                </div>
+                                <span class="arma-pc-badge ms-3">
+                                    <i class="fas fa-microchip me-1"></i>Armar PC
+                                </span>
+                            </div>
+                        </div>
+                        
+                        <!-- Acordeón de categorías -->
+                        <div class="accordion" id="categoriasAccordion">
+                            <!-- Categoría dinámica -->
+                            <div th:each="categoria, iterStat : ${categorias}" class="accordion-item mb-3" style="border-radius: 10px; overflow: hidden;">
+                                <h2 class="accordion-header">
+                                    <button class="accordion-button collapsed" type="button" 
+                                            data-bs-toggle="collapse" 
+                                            th:data-bs-target="'#categoria' + ${categoria.id}"
+                                            th:onclick="'cargarProductosCategoria(' + ${categoria.id} + ')'"
+                                            th:aria-controls="'categoria' + ${categoria.id}"
+                                            style="font-weight: bold;">
+                                        <i class="fas fa-microchip me-3"></i>
+                                        <div class="flex-grow-1">
+                                            <div th:text="${categoria.nombre}" style="font-size: 1.1rem;">Categoría</div>
+                                            <small class="text-muted" th:text="${categoria.descripcion}">Descripción</small>
+                                        </div>
+                                        <span class="selected-badge ms-2" th:id="'selectedBadge_' + ${categoria.id}" style="display: none;">
+                                            <i class="fas fa-check me-1"></i>Seleccionado
+                                        </span>
+                                    </button>
+                                </h2>
+                                <div th:id="'categoria' + ${categoria.id}" 
+                                     class="accordion-collapse collapse" 
+                                     data-bs-parent="#categoriasAccordion">
+                                    <div class="accordion-body">
+                                        <!-- Loading -->
+                                        <div th:id="'loading' + ${categoria.id}" class="text-center py-4">
+                                            <div class="spinner-border text-primary" role="status">
+                                                <span class="visually-hidden">Cargando productos...</span>
+                                            </div>
+                                            <p class="mt-2">Cargando productos de <span th:text="${categoria.nombre}">categoría</span>...</p>
+                                        </div>
+                                        
+                                        <!-- Contenedor de productos -->
+                                        <div th:id="'productos' + ${categoria.id}" class="row" style="display: none;">
+                                            <!-- Los productos se cargarán dinámicamente aquí -->
+                                        </div>
+                                        
+                                        <!-- Mensaje si no hay productos -->
+                                        <div th:id="'noProductos' + ${categoria.id}" class="text-center py-4 text-muted" style="display: none;">
+                                            <i class="fas fa-box-open fa-2x mb-3"></i>
+                                            <p>No hay productos disponibles en esta categoría</p>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+				
+				
+				<!-- Summary Section -->
+				                <div class="col-lg-4">
+				                    <div class="summary-section">
+				                        <h2 class="summary-title">
+				                            <i class="fas fa-microchip me-2"></i>
+				                            Mi PC Personalizada
+				                        </h2>
+				                        
+				                        <!-- Lista de componentes -->
+				                        <div id="componentesSeleccionados">
+				                            <div class="text-center text-muted py-4">
+				                                <i class="fas fa-desktop fa-3x mb-3"></i>
+				                                <p>Aún no has seleccionado componentes</p>
+				                                <small>Selecciona productos de las categorías para armar tu PC</small>
+				                            </div>
+				                        </div>
+				                        
+				                        <div class="security-badge">
+				                            <i class="fas fa-lock me-2"></i>
+				                            <span>Compra 100% Segura</span>
+				                        </div>
+				                        
+				                        <!-- Total -->
+				                        <div id="totalSection" class="price-section" style="display: none;">
+				                            <span class="price-label">Precio Total</span>
+				                            <span class="price-value">S/ <span id="totalGeneral">0.00</span></span>
+				                        </div>
+				                        
+				                        <!-- Botón de pedido -->
+				                        <div id="botonPedido" style="display: none;">
+				                            <button class="btn-continuar" id="continuarCompra" onclick="irACheckout()" th:disabled="${clienteLogueado == null}">
+				                                <i class="fas fa-shopping-cart me-2"></i>Ir al Checkout
+				                            </button>
+				                            <small class="text-muted mt-2 text-center d-block" th:if="${clienteLogueado == null}">
+				                                Inicia sesión para continuar
+				                            </small>
+				                        </div>
+				                        
+				                        <!-- Información adicional -->
+				                        <div class="mt-3">
+				                            <small class="text-muted">
+				                                <i class="fas fa-info-circle me-1"></i>
+				                                Los precios incluyen IGV. Tiempo de armado: 2-3 días hábiles.
+				                            </small>
+				                        </div>
+				                    </div>
+				                </div>
+				            </div>
+				        </div>
+				    </section>
+					
+					<!-- Modal de Login -->
+					<div class="modal fade" id="loginModal" tabindex="-1">
+					    <div class="modal-dialog">
+					        <div class="modal-content">
+					            <div class="modal-header">
+					                <h5 class="modal-title"><i class="fas fa-sign-in-alt me-2"></i>Iniciar Sesión</h5>
+					                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					            </div>
+					            <div class="modal-body">
+					                <form id="loginForm">
+					                    <div class="mb-3">
+					                        <label for="loginUsuario" class="form-label">Usuario</label>
+					                        <input type="text" class="form-control" id="loginUsuario" required>
+					                    </div>
+					                    <div class="mb-3">
+					                        <label for="loginPassword" class="form-label">Contraseña</label>
+					                        <input type="password" class="form-control" id="loginPassword" required>
+					                    </div>
+					                    <div id="loginAlert"></div>
+					                </form>
+					            </div>
+					            <div class="modal-footer">
+					                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+					                <button type="button" class="btn btn-primary" onclick="iniciarSesion()">
+					                    <i class="fas fa-sign-in-alt me-1"></i>Ingresar
+					                </button>
+					            </div>
+					        </div>
+					    </div>
+					</div>
+
+					<!-- Modal de Registro de Cliente -->
+					<div class="modal fade" id="registroClienteModal" tabindex="-1">
+					    <div class="modal-dialog">
+					        <div class="modal-content">
+					            <div class="modal-header">
+					                <h5 class="modal-title">Registro de Cliente</h5>
+					                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+					            </div>
+					            <div class="modal-body">
+					                <form id="registroClienteForm">
+					                    <div class="row">
+					                        <div class="col-md-6">
+					                            <div class="mb-3">
+					                                <label class="form-label">DNI *</label>
+					                                <input type="text" class="form-control" id="regDni" required maxlength="8">
+					                            </div>
+					                        </div>
+					                        <div class="col-md-6">
+					                            <div class="mb-3">
+					                                <label class="form-label">Usuario *</label>
+					                                <input type="text" class="form-control" id="regUsuario" required>
+					                            </div>
+					                        </div>
+					                        <div class="col-md-6">
+					                            <div class="mb-3">
+					                                <label class="form-label">Nombre *</label>
+					                                <input type="text" class="form-control" id="regNombre" required>
+					                            </div>
+					                        </div>
+					                        <div class="col-md-6">
+					                            <div class="mb-3">
+					                                <label class="form-label">Apellido *</label>
+					                                <input type="text" class="form-control" id="regApellido" required>
+					                            </div>
+					                        </div>
+					                        <div class="col-md-6">
+					                            <div class="mb-3">
+					                                <label class="form-label">Correo *</label>
+					                                <input type="email" class="form-control" id="regCorreo" required>
+					                            </div>
+					                        </div>
+					                        <div class="col-md-6">
+					                            <div class="mb-3">
+					                                <label class="form-label">Celular</label>
+					                                <input type="text" class="form-control" id="regCelular">
+					                            </div>
+					                        </div>
+					                        <div class="col-12">
+					                            <div class="mb-3">
+					                                <label class="form-label">Dirección</label>
+					                                <input type="text" class="form-control" id="regDireccion">
+					                            </div>
+					                        </div>
+					                        <div class="col-md-6">
+					                            <div class="mb-3">
+					                                <label class="form-label">Contraseña *</label>
+					                                <input type="password" class="form-control" id="regPassword" required>
+					                            </div>
+					                        </div>
+					                        <div class="col-md-6">
+					                            <div class="mb-3">
+					                                <label class="form-label">Confirmar Contraseña *</label>
+					                                <input type="password" class="form-control" id="regPasswordConfirm" required>
+					                            </div>
+					                        </div>
+					                    </div>
+					                    <div id="registroAlert"></div>
+					                </form>
+					            </div>
+					            <div class="modal-footer">
+					                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+					                <button type="button" class="btn btn-success" onclick="registrarCliente()">
+					                    <i class="fas fa-user-plus me-2"></i>Registrar
+					                </button>
+					            </div>
+					        </div>
+					    </div>
+					</div>
+
+				    <!-- Footer -->
+				    <div th:replace="~{footer :: footer}"></div>
+
+				    <!-- Bootstrap 5 JS -->
+				    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+				    <!-- SweetAlert2 -->
+				    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+				    <!-- Carrito JS (funcionalidad principal) -->
+				    <script th:src="@{/js/carrito.js}"></script>
+					<!-- Carrito JS (ArmaPC) -->
+					<script th:src="@{/js/armaPC.js}"></script>
+	
+</body>
+</html>			

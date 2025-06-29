@@ -1,0 +1,1471 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Vendedor - Akira Computer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 2px 0;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .main-content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .btn-close-sale {
+            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+            border: none;
+            color: white;
+        }
+        .btn-close-sale:hover {
+            background: linear-gradient(135deg, #e83e8c 0%, #fd7e14 100%);
+            color: white;
+        }
+        .btn-new-order {
+            background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+            border: none;
+            color: white;
+        }
+        .btn-new-order:hover {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #fd7e14 0%, #e83e8c 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .order-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+            border-left: 4px solid #fd7e14;
+        }
+        .order-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+        .closed-order {
+            border-left-color: #28a745;
+            opacity: 0.8;
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-0">
+                <div class="p-3">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-handshake fa-2x mb-2"></i>
+                        <h5>Panel Vendedor</h5>
+                        <small th:text="${usuario.nombreCompleto}">Vendedor Name</small>
+                    </div>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#dashboard">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <a class="nav-link" href="#nuevo-pedido" onclick="showNewOrderModal()">
+                            <i class="fas fa-plus me-2"></i>Nuevo Pedido
+                        </a>
+                        <hr class="my-3">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-handshake me-2"></i>Dashboard Vendedor</h2>
+                    <div class="d-flex align-items-center">
+                        <button class="btn btn-new-order me-3" onclick="showNewOrderModal()">
+                            <i class="fas fa-plus me-1"></i>Nuevo Pedido
+                        </button>
+                        <div class="user-avatar me-2" th:text="${usuario.nombre.substring(0,1)}">V</div>
+                        <span th:text="${usuario.nombreCompleto}">Vendedor Name</span>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <h4 id="listos" th:text="${#lists.size(atendidos)}">0</h4>
+                            <small class="text-muted">Listos para Cerrar</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-success mb-2">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <h4 id="ventasHoy">0</h4>
+                            <small class="text-muted">Ventas Hoy</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-info mb-2">
+                                <i class="fas fa-dollar-sign fa-2x"></i>
+                            </div>
+                            <h4 id="ingresosMes">S/ 0</h4>
+                            <small class="text-muted">Ingresos del Mes</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-trophy fa-2x"></i>
+                            </div>
+                            <h4 id="totalVentas" th:text="${#lists.size(cerrados)}">0</h4>
+                            <small class="text-muted">Total Ventas</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pedidos Listos para Cerrar -->
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-clock me-2 text-warning"></i>Pedidos Listos para Cerrar</h5>
+                        <button class="btn btn-warning btn-sm" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-1"></i>Actualizar
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <div th:each="pedido : ${atendidos}" class="col-12 mb-3">
+                            <div class="order-card">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-primary me-2" th:text="'#' + ${pedido.id}">#001</span>
+                                            <span class="badge bg-success me-2">ATENDIDO</span>
+                                            <span class="badge bg-info me-2" th:text="${pedido.tipoPedido}">ARMAR_PC</span>
+                                            <small class="text-muted" th:text="${#temporals.format(pedido.fechaAtencion, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:30</small>
+                                        </div>
+                                        
+                                        <h6 class="mb-1" th:text="'Cliente: ' + ${pedido.cliente.nombreCompleto}">Cliente: Juan Pérez</h6>
+                                        <p class="text-success fw-bold mb-1" th:text="'Total: S/ ' + ${pedido.total}">Total: S/ 1,500.00</p>
+                                        
+                                        <div th:if="${pedido.tecnicoAsignado}" class="mt-2">
+                                            <small class="text-muted">
+                                                <i class="fas fa-tools me-1"></i>
+                                                Técnico: <span th:text="${pedido.tecnicoAsignado.nombreCompleto}">Carlos López</span>
+                                            </small>
+                                        </div>
+                                        
+                                        <div th:if="${pedido.observaciones}" class="mt-2">
+                                            <small class="text-muted">
+                                                <strong>Observaciones:</strong>
+                                                <span th:text="${#strings.abbreviate(pedido.observaciones, 100)}">Trabajo completado exitosamente...</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4 text-end">
+                                        <button class="btn btn-close-sale" 
+                                                th:onclick="'cerrarVenta(' + ${pedido.id} + ')'">
+                                            <i class="fas fa-handshake me-1"></i>Cerrar Venta
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(atendidos)}" class="text-center py-5 text-muted">
+                        <i class="fas fa-check-circle fa-3x mb-3"></i>
+                        <h5>¡Todo al día!</h5>
+                        <p>No hay pedidos pendientes de cerrar</p>
+                    </div>
+                </div>
+
+                <!-- Mis Ventas Cerradas (Últimas 10) -->
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-check-circle me-2 text-success"></i>Mis Últimas Ventas</h5>
+                        <a href="#ver-todas" class="btn btn-outline-primary btn-sm">
+                            <i class="fas fa-list me-1"></i>Ver Todas
+                        </a>
+                    </div>
+
+                    <div class="row">
+                        <div th:each="pedido : ${#lists.size(cerrados) > 10 ? cerrados.subList(0, 10) : cerrados}" class="col-12 mb-2">
+                            <div class="order-card closed-order">
+                                <div class="row align-items-center">
+                                    <div class="col-md-10">
+                                        <div class="d-flex align-items-center mb-1">
+                                            <span class="badge bg-success me-2" th:text="'#' + ${pedido.id}">#001</span>
+                                            <span class="badge bg-secondary me-2">CERRADO</span>
+                                            <strong class="text-success me-2" th:text="'S/ ' + ${pedido.total}">S/ 1,500.00</strong>
+                                            <small class="text-muted" th:text="${#temporals.format(pedido.fechaCierre, 'dd/MM/yyyy')}">01/01/2024</small>
+                                        </div>
+                                        <small th:text="'Cliente: ' + ${pedido.cliente.nombreCompleto}">Cliente: Juan Pérez</small>
+                                    </div>
+                                    <div class="col-md-2 text-end">
+                                        <i class="fas fa-check-circle text-success fa-lg"></i>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(cerrados)}" class="text-center py-4 text-muted">
+                        <i class="fas fa-chart-line fa-2x mb-2"></i>
+                        <p>Aún no tienes ventas registradas</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Cerrar Venta -->
+    <div class="modal fade" id="cerrarVentaModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Cerrar Venta</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-success">
+                        <i class="fas fa-check-circle me-2"></i>
+                        ¿Confirma que desea cerrar esta venta? El pedido pasará al estado CERRADO y se notificará al cliente.
+                    </div>
+                    <input type="hidden" id="pedidoIdCerrar">
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarCierre()">
+                        <i class="fas fa-handshake me-1"></i>Cerrar Venta
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Nuevo Pedido -->
+
+
+	<div class="modal fade" id="nuevoPedidoModal" tabindex="-1" aria-labelledby="nuevoPedidoModalLabel" aria-hidden="true">
+	    <div class="modal-dialog modal-xl">
+	        <div class="modal-content">
+	            <div class="modal-header">
+	                <h5 class="modal-title" id="nuevoPedidoModalLabel">
+	                    <i class="fas fa-plus me-2"></i>Crear Nueva Orden de Pedido
+	                </h5>
+	                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+	            </div>
+	            
+	            <div class="modal-body" style="max-height: 80vh; overflow-y: auto;">
+	                <!-- Alertas del modal -->
+	                <div id="nuevoPedidoModalAlertContainer"></div>
+	                
+	                <!-- PASO 1: SELECCIÓN DE CLIENTE -->
+	                <div class="mb-4">
+	                    <h6 class="text-primary mb-3">
+	                        <i class="fas fa-user me-2"></i>Paso 1: Seleccionar Cliente
+	                    </h6>
+	                    
+	                    <!-- Búsqueda de cliente -->
+	                    <div class="row mb-3">
+	                        <div class="col-md-8">
+	                            <label class="form-label">Buscar cliente por nombre, apellido o DNI</label>
+	                            <div class="input-group">
+	                                <input type="text" class="form-control" id="clienteBuscarVendedor" 
+	                                       placeholder="Ingrese nombre, apellido o DNI para buscar...">
+	                                <button class="btn btn-outline-secondary" type="button" onclick="buscarClientesVendedor()">
+	                                    <i class="fas fa-search"></i>
+	                                </button>
+	                            </div>
+	                        </div>
+	                        <div class="col-md-4">
+	                            <label class="form-label">&nbsp;</label>
+	                            <button class="btn btn-success w-100" onclick="abrirModalRegistrarClienteVendedor()">
+	                                <i class="fas fa-plus me-1"></i>Nuevo Cliente
+	                            </button>
+	                        </div>
+	                    </div>
+	                    
+	                    <!-- Resultados de búsqueda de clientes -->
+	                    <div id="clienteResultadosVendedor" class="border rounded p-3 mb-3" style="display: none;">
+	                        <!-- Se llenarán dinámicamente con JavaScript -->
+	                    </div>
+	                    
+	                    <!-- Cliente seleccionado -->
+	                    <div id="clienteSeleccionadoInfoVendedor" class="alert alert-success" style="display: none;">
+	                        <!-- Se llenará dinámicamente con JavaScript -->
+	                    </div>
+	                </div>
+	                
+	                <!-- PASO 2: TIPO DE PEDIDO -->
+	                <div class="mb-4" id="seccionTipoPedidoVendedor" style="display: none;">
+	                    <h6 class="text-primary mb-3">
+	                        <i class="fas fa-list me-2"></i>Paso 2: Tipo de Pedido
+	                    </h6>
+	                    
+	                    <div class="row">
+	                        <div class="col-md-6">
+	                            <div class="card h-100 tipo-pedido-card-vendedor" onclick="seleccionarTipoPedidoVendedor('PRODUCTO_COMPLETO')">
+	                                <div class="card-body text-center">
+	                                    <i class="fas fa-box fa-3x text-info mb-3"></i>
+	                                    <h5 class="card-title">Producto Completo</h5>
+	                                    <p class="card-text text-muted">
+	                                        Seleccionar productos individuales del inventario
+	                                    </p>
+	                                </div>
+	                            </div>
+	                        </div>
+	                        <div class="col-md-6">
+	                            <div class="card h-100 tipo-pedido-card-vendedor" onclick="seleccionarTipoPedidoVendedor('ARMAR_PC')">
+	                                <div class="card-body text-center">
+	                                    <i class="fas fa-desktop fa-3x text-warning mb-3"></i>
+	                                    <h5 class="card-title">Armar PC</h5>
+	                                    <p class="card-text text-muted">
+	                                        Seleccionar componentes por categoría para armar una PC
+	                                    </p>
+	                                </div>
+	                            </div>
+	                        </div>
+	                    </div>
+	                    
+	                    <!-- Indicador del tipo seleccionado -->
+	                    <div id="tipoSeleccionadoInfoVendedor" class="alert alert-info mt-3" style="display: none;">
+	                        <!-- Se llenará dinámicamente -->
+	                    </div>
+	                </div>
+	                
+	                <!-- PASO 3A: PRODUCTOS COMPLETOS -->
+	                <div class="mb-4" id="seccionProductosCompletosVendedor" style="display: none;">
+	                    <h6 class="text-primary mb-3">
+	                        <i class="fas fa-shopping-cart me-2"></i>Paso 3: Seleccionar Productos
+	                    </h6>
+	                    
+	                    <!-- Búsqueda de productos -->
+	                    <div class="row mb-3">
+	                        <div class="col-md-4">
+	                            <label class="form-label">Buscar por código</label>
+	                            <div class="input-group">
+	                                <input type="number" class="form-control" id="productoCodigoVendedor" 
+	                                       placeholder="Código del producto">
+	                                <button class="btn btn-outline-secondary" onclick="buscarProductoPorCodigoVendedor()">
+	                                    <i class="fas fa-search"></i>
+	                                </button>
+	                            </div>
+	                        </div>
+	                        <div class="col-md-4">
+	                            <label class="form-label">Buscar por nombre</label>
+	                            <div class="input-group">
+	                                <input type="text" class="form-control" id="productoNombreVendedor" 
+	                                       placeholder="Nombre del producto">
+	                                <button class="btn btn-outline-secondary" onclick="buscarProductosPorNombreVendedor()">
+	                                    <i class="fas fa-search"></i>
+	                                </button>
+	                            </div>
+	                        </div>
+	                        <div class="col-md-4">
+	                            <label class="form-label">Filtrar por categoría</label>
+	                            <select class="form-control" id="categoriaFiltroVendedor" onchange="buscarProductosPorCategoriaVendedor()">
+	                                <option value="">Todas las categorías</option>
+	                                <!-- Se llenarán dinámicamente -->
+	                            </select>
+	                        </div>
+	                    </div>
+	                    
+	                    <!-- Resultados de productos -->
+	                    <div id="productosResultadosVendedor" class="row" style="display: none;">
+	                        <!-- Se llenarán dinámicamente -->
+	                    </div>
+	                    
+	                    <!-- Productos seleccionados -->
+	                    <div class="mt-4">
+	                        <h6>Productos Seleccionados</h6>
+	                        <div class="table-responsive">
+	                            <table class="table table-sm">
+	                                <thead class="table-light">
+	                                    <tr>
+	                                        <th>Código</th>
+	                                        <th>Producto</th>
+	                                        <th>Precio Unit.</th>
+	                                        <th>Cantidad</th>
+	                                        <th>Subtotal</th>
+	                                        <th>Acciones</th>
+	                                    </tr>
+	                                </thead>
+	                                <tbody id="productosSeleccionadosTableVendedor">
+	                                    <tr>
+	                                        <td colspan="6" class="text-center text-muted">No hay productos seleccionados</td>
+	                                    </tr>
+	                                </tbody>
+	                            </table>
+	                        </div>
+	                    </div>
+	                </div>
+	                
+	                <!-- PASO 3B: ARMAR PC -->
+	                <div class="mb-4" id="seccionArmarPCVendedor" style="display: none;">
+	                    <h6 class="text-primary mb-3">
+	                        <i class="fas fa-microchip me-2"></i>Paso 3: Seleccionar Componentes para PC
+	                    </h6>
+	                    
+	                    <!-- Acordeón de categorías -->
+	                    <div class="accordion" id="categoriasAccordionVendedor">
+	                        <!-- Se llenarán dinámicamente con las categorías -->
+	                    </div>
+	                    
+	                    <!-- Resumen de componentes seleccionados -->
+	                    <div class="mt-4">
+	                        <h6>Componentes Seleccionados</h6>
+	                        <div class="table-responsive">
+	                            <table class="table table-sm">
+	                                <thead class="table-light">
+	                                    <tr>
+	                                        <th>Categoría</th>
+	                                        <th>Componente</th>
+	                                        <th>Modelo</th>
+	                                        <th>Precio</th>
+	                                        <th>Acciones</th>
+	                                    </tr>
+	                                </thead>
+	                                <tbody id="componentesSeleccionadosTableVendedor">
+	                                    <tr>
+	                                        <td colspan="5" class="text-center text-muted">No hay componentes seleccionados</td>
+	                                    </tr>
+	                                </tbody>
+	                            </table>
+	                        </div>
+	                    </div>
+	                </div>
+	                
+	                <!-- RESUMEN Y TOTALES -->
+	                <div class="row mt-4" id="seccionResumenVendedor" style="display: none;">
+	                    <div class="col-md-8">
+	                        <div class="card">
+	                            <div class="card-header">
+	                                <h6 class="mb-0"><i class="fas fa-clipboard-list me-2"></i>Resumen del Pedido</h6>
+	                            </div>
+	                            <div class="card-body">
+	                                <div class="row">
+	                                    <div class="col-6">
+	                                        <strong>Cliente:</strong><br>
+	                                        <span id="resumenClienteVendedor">-</span>
+	                                    </div>
+	                                    <div class="col-6">
+	                                        <strong>Tipo de Pedido:</strong><br>
+	                                        <span id="resumenTipoVendedor">-</span>
+	                                    </div>
+	                                </div>
+	                                <hr>
+	                                <div class="row">
+	                                    <div class="col-6">
+	                                        <strong>Total de Items:</strong><br>
+	                                        <span id="resumenCantidadVendedor">0</span>
+	                                    </div>
+	                                    <div class="col-6">
+	                                        <strong>Monto Total:</strong><br>
+	                                        <span class="h5 text-success">S/ <span id="resumenTotalVendedor">0.00</span></span>
+	                                    </div>
+	                                </div>
+	                            </div>
+	                        </div>
+	                    </div>
+						<div class="col-md-4">
+						    <div class="d-grid gap-2">
+						        <!-- NUEVO: Botón Registrar Pago -->
+						        <button class="btn btn-warning btn-lg" id="btnRegistrarPagoVendedor" onclick="abrirModalRegistrarPago()" disabled>
+						            <i class="fas fa-credit-card me-2"></i>Registrar Pago
+						        </button>
+						        
+						        <!-- EXISTENTE: Botón Crear Orden (inicialmente deshabilitado hasta que se registre pago) -->
+						        <button class="btn btn-success btn-lg" id="btnGenerarPedidoVendedor" onclick="generarPedidoVendedor()" disabled>
+						            <i class="fas fa-plus-circle me-2"></i>Crear Orden de Pedido
+						        </button>
+						        
+						        <!-- EXISTENTE: Botón Limpiar -->
+						        <button class="btn btn-outline-secondary" onclick="limpiarFormularioVendedor()">
+						            <i class="fas fa-broom me-2"></i>Limpiar Formulario
+						        </button>
+						    </div>
+						</div>
+	                </div>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+	<!-- Modal de Confirmación de Pedido Generado - VENDEDOR -->
+		<div class="modal fade" id="confirmacionPedidoVendedorModal" tabindex="-1" aria-labelledby="confirmacionPedidoVendedorModalLabel" aria-hidden="true">
+		    <div class="modal-dialog modal-dialog-centered">
+		        <div class="modal-content">
+		            <div class="modal-header bg-success text-white">
+		                <h5 class="modal-title" id="confirmacionPedidoVendedorModalLabel">
+		                    <i class="fas fa-check-circle me-2"></i>¡Orden de Pedido Generada Exitosamente!
+		                </h5>
+		            </div>
+		            <div class="modal-body text-center">
+		                <div class="mb-3">
+		                    <i class="fas fa-check-circle fa-4x text-success"></i>
+		                </div>
+		                <h4 class="mb-3">¡Orden generada exitosamente!</h4>
+		                <div class="alert alert-success" role="alert">
+		                    <h5 class="alert-heading">Código de la Orden:</h5>
+		                    <hr>
+		                    <h2 class="mb-0" id="codigoOrdenGeneradaVendedor">-</h2>
+		                </div>
+		                
+		                <!-- Información adicional del pedido -->
+		                <div class="row mt-3">
+		                    <div class="col-md-6">
+		                        <div class="card bg-light">
+		                            <div class="card-body text-center">
+		                                <h6 class="card-title">👤 Cliente</h6>
+		                                <p class="card-text" id="clienteOrdenGenerada">-</p>
+		                            </div>
+		                        </div>
+		                    </div>
+		                    <div class="col-md-6">
+		                        <div class="card bg-light">
+		                            <div class="card-body text-center">
+		                                <h6 class="card-title">💰 Total</h6>
+		                                <p class="card-text text-success" id="totalOrdenGenerada">S/ 0.00</p>
+		                            </div>
+		                        </div>
+		                    </div>
+		                </div>
+		                
+		                <div class="row mt-2">
+		                    <div class="col-md-6">
+		                        <div class="card bg-light">
+		                            <div class="card-body text-center">
+		                                <h6 class="card-title">🔧 Tipo</h6>
+		                                <p class="card-text" id="tipoOrdenGenerada">-</p>
+		                            </div>
+		                        </div>
+		                    </div>
+		                    <div class="col-md-6">
+		                        <div class="card bg-light">
+		                            <div class="card-body text-center">
+		                                <h6 class="card-title">📦 Items</h6>
+		                                <p class="card-text" id="itemsOrdenGenerada">0</p>
+		                            </div>
+		                        </div>
+		                    </div>
+		                </div>
+		                
+		                <p class="text-muted mt-3">
+		                    La orden ha sido registrada y está pendiente de asignación técnica.
+		                    El cliente será notificado del progreso de su pedido.
+		                </p>
+		            </div>
+		            <div class="modal-footer justify-content-center">
+		                <button type="button" class="btn btn-success" data-bs-dismiss="modal">
+		                    <i class="fas fa-check me-2"></i>Entendido
+		                </button>
+		                <button type="button" class="btn btn-outline-primary" onclick="crearNuevaOrden()">
+		                    <i class="fas fa-plus me-2"></i>Crear Nueva Orden
+		                </button>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+		
+		<!-- Modal de Registro de Pago para Vendedor -->
+		<div class="modal fade" id="registrarPagoVendedorModal" tabindex="-1" aria-labelledby="registrarPagoVendedorModalLabel" aria-hidden="true">
+		    <div class="modal-dialog modal-lg">
+		        <div class="modal-content">
+		            <div class="modal-header">
+		                <h5 class="modal-title" id="registrarPagoVendedorModalLabel">
+		                    <i class="fas fa-credit-card me-2"></i>Registrar Pago del Pedido
+		                </h5>
+		                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+		            </div>
+		            <div class="modal-body">
+		                
+		                <!-- Alertas del modal -->
+		                <div id="registrarPagoVendedorModalAlertContainer"></div>
+		                
+		                <!-- Resumen del pedido -->
+		                <div class="card mb-4">
+		                    <div class="card-header">
+		                        <h6 class="mb-0"><i class="fas fa-shopping-cart me-2"></i>Resumen del Pedido</h6>
+		                    </div>
+		                    <div class="card-body">
+		                        <div class="row">
+		                            <div class="col-md-6">
+		                                <p><strong>Cliente:</strong> <span id="pagoVendedorClienteNombre">-</span></p>
+		                                <p><strong>DNI:</strong> <span id="pagoVendedorClienteDni">-</span></p>
+		                            </div>
+		                            <div class="col-md-6">
+		                                <p><strong>Total de productos:</strong> <span id="pagoVendedorCantidadProductos">0</span> unidades</p>
+		                                <p><strong>Monto total:</strong> <span class="text-primary fs-5"><strong>S/ <span id="pagoVendedorMontoTotal">0.00</span></strong></span></p>
+		                            </div>
+		                        </div>
+		                    </div>
+		                </div>
+		                
+		                <!-- Datos del pago -->
+		                <div class="card">
+		                    <div class="card-header">
+		                        <h6 class="mb-0"><i class="fas fa-university me-2"></i>Datos del Pago</h6>
+		                    </div>
+		                    <div class="card-body">
+		                        <div class="row">
+		                            <div class="col-md-6">
+		                                <div class="mb-3">
+		                                    <label for="pagoVendedorBanco" class="form-label">Banco <span class="text-danger">*</span></label>
+		                                    <select class="form-select" id="pagoVendedorBanco" required>
+		                                        <option value="">Seleccione un banco...</option>
+		                                        <!-- Los bancos se cargarán dinámicamente desde la BD -->
+		                                    </select>
+		                                </div>
+		                            </div>
+		                            <div class="col-md-6">
+		                                <div class="mb-3">
+		                                    <label for="pagoVendedorNumeroOperacion" class="form-label">Número de Operación <span class="text-danger">*</span></label>
+		                                    <input type="text" class="form-control" id="pagoVendedorNumeroOperacion" 
+		                                           placeholder="Ingrese el número de operación" maxlength="50" required>
+		                                </div>
+		                            </div>
+		                        </div>
+		                        
+		                        <div class="alert alert-info">
+		                            <i class="fas fa-info-circle me-2"></i>
+		                            <strong>Importante:</strong> Asegúrese de ingresar correctamente el número de operación del banco seleccionado.
+		                        </div>
+		                    </div>
+		                </div>
+		            </div>
+		            <div class="modal-footer">
+		                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+		                    <i class="fas fa-times me-2"></i>Cancelar
+		                </button>
+		                <button type="button" class="btn btn-success" onclick="confirmarRegistroPago()" id="btnConfirmarPagoVendedor" disabled>
+		                    <i class="fas fa-check me-2"></i>Confirmar Pago
+		                </button>
+		            </div>
+		        </div>
+		    </div>
+		</div>
+	
+	<!-- Modal para registrar nuevo cliente desde vendedor -->
+	<div class="modal fade" id="registrarClienteModalVendedor" tabindex="-1">
+	    <div class="modal-dialog">
+	        <div class="modal-content">
+	            <div class="modal-header">
+	                <h5 class="modal-title">
+	                    <i class="fas fa-user-plus me-2"></i>Registrar Nuevo Cliente
+	                </h5>
+	                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+	            </div>
+	            <div class="modal-body">
+	                <div id="registrarClienteModalAlertContainerVendedor"></div>
+	                
+	                <div class="row">
+	                    <div class="col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">DNI/RUC *</label>
+	                            <input type="text" class="form-control" id="registroDniVendedor" 
+	                                   placeholder="8 dígitos para DNI, 11 para RUC" maxlength="11">
+	                        </div>
+	                        <div class="mb-3">
+	                            <label class="form-label">Nombre *</label>
+	                            <input type="text" class="form-control" id="registroNombreVendedor" 
+	                                   placeholder="Nombre del cliente">
+	                        </div>
+	                        <div class="mb-3">
+	                            <label class="form-label">Apellido</label>
+	                            <input type="text" class="form-control" id="registroApellidoVendedor" 
+	                                   placeholder="Apellido del cliente">
+	                        </div>
+	                    </div>
+	                    <div class="col-md-6">
+	                        <div class="mb-3">
+	                            <label class="form-label">Correo</label>
+	                            <input type="email" class="form-control" id="registroCorreoVendedor" 
+	                                   placeholder="cliente@email.com">
+	                        </div>
+	                        <div class="mb-3">
+	                            <label class="form-label">Teléfono</label>
+	                            <input type="text" class="form-control" id="registroTelefonoVendedor" 
+	                                   placeholder="999999999">
+	                        </div>
+	                        <div class="mb-3">
+	                            <label class="form-label">Dirección</label>
+	                            <textarea class="form-control" id="registroDireccionVendedor" rows="2" 
+	                                      placeholder="Dirección del cliente"></textarea>
+	                        </div>
+	                    </div>
+	                </div>
+	            </div>
+	            <div class="modal-footer">
+	                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+	                <button type="button" class="btn btn-primary" id="btnGuardarClienteVendedor" onclick="registrarNuevoClienteVendedor()">
+	                    <i class="fas fa-save me-1"></i>Registrar Cliente
+	                </button>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+	
+	
+	<style>
+	/* Estilos específicos para el modal del vendedor */
+	.tipo-pedido-card-vendedor {
+	    cursor: pointer;
+	    transition: all 0.3s ease;
+	    border: 2px solid transparent;
+	}
+
+	.tipo-pedido-card-vendedor:hover {
+	    transform: translateY(-5px);
+	    box-shadow: 0 4px 15px rgba(0,0,0,0.1);
+	    border-color: #007bff;
+	}
+
+	.tipo-pedido-card-vendedor.selected {
+	    border-color: #28a745;
+	    background-color: #f8fff9;
+	}
+
+	.cliente-item-vendedor {
+	    cursor: pointer;
+	    transition: background-color 0.2s ease;
+	}
+
+	.cliente-item-vendedor:hover {
+	    background-color: #f8f9fa;
+	}
+
+	.cliente-item-vendedor.selected {
+	    background-color: #e7f3ff;
+	    border-color: #007bff;
+	}
+
+	.producto-card-vendedor {
+	    transition: all 0.2s ease;
+	    cursor: pointer;
+	}
+
+	.producto-card-vendedor:hover {
+	    transform: translateY(-2px);
+	    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+	}
+
+	.producto-card-vendedor.selected {
+	    border-color: #28a745;
+	    background-color: #f8fff9;
+	}
+
+	#nuevoPedidoModalAlertContainer .alert {
+	    margin-bottom: 15px;
+	    border-radius: 6px;
+	}
+	</style>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        function cerrarVenta(pedidoId) {
+            document.getElementById('pedidoIdCerrar').value = pedidoId;
+            new bootstrap.Modal(document.getElementById('cerrarVentaModal')).show();
+        }
+
+        function confirmarCierre() {
+            const pedidoId = document.getElementById('pedidoIdCerrar').value;
+
+            fetch('/orden-pedido/cerrar/' + pedidoId, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                }
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Venta cerrada exitosamente');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            });
+        }
+
+        function showNewOrderModal() {
+            new bootstrap.Modal(document.getElementById('nuevoPedidoModal')).show();
+        }
+
+        function buscarCliente() {
+            const texto = document.getElementById('clienteBuscar').value;
+            if (!texto.trim()) {
+                alert('Ingrese texto para buscar');
+                return;
+            }
+
+            fetch('/usuario/buscar-por-texto?texto=' + encodeURIComponent(texto))
+                .then(response => response.json())
+                .then(data => {
+                    if (data.success && data.data.length > 0) {
+                        // Mostrar el primer cliente encontrado (o podrías hacer un selector)
+                        const cliente = data.data.filter(u => u.rol.nombre === 'CLIENTE')[0];
+                        if (cliente) {
+                            document.getElementById('clienteId').value = cliente.id;
+                            document.getElementById('clienteInfo').textContent = 
+                                `${cliente.nombreCompleto} - DNI: ${cliente.id}`;
+                            document.getElementById('clienteSeleccionado').classList.remove('d-none');
+                        } else {
+                            alert('No se encontraron clientes con ese criterio');
+                        }
+                    } else {
+                        alert('No se encontraron clientes');
+                    }
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    alert('Error en la búsqueda');
+                });
+        }
+
+        function crearPedido() {
+            const clienteId = document.getElementById('clienteId').value;
+            const tipoPedido = document.getElementById('tipoPedido').value;
+            const total = document.getElementById('total').value;
+            const detalles = document.getElementById('detalles').value;
+
+            if (!clienteId || !tipoPedido || !total) {
+                alert('Complete todos los campos obligatorios');
+                return;
+            }
+
+            const vendedorId = /*[[${usuario.id}]]*/ '';
+
+            fetch('/orden-pedido/crear-vendedor', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    clienteId: clienteId,
+                    vendedorId: vendedorId,
+                    tipoPedido: tipoPedido,
+                    total: parseFloat(total),
+                    detallesComponentes: detalles
+                })
+            })
+            .then(response => response.json())
+            .then(data => {
+                if (data.success) {
+                    alert('Pedido creado exitosamente');
+                    location.reload();
+                } else {
+                    alert('Error: ' + data.message);
+                }
+            })
+            .catch(error => {
+                console.error('Error:', error);
+                alert('Error de conexión');
+            });
+        }
+
+        function verDetallesCompletos(pedidoId) {
+            // Similar al técnico, pero adaptado para vendedor
+            window.open('/orden-pedido/detalle/' + pedidoId, '_blank');
+        }
+
+        function refreshData() {
+            location.reload();
+        }
+
+        function logout() {
+            if (confirm('¿Está seguro que desea cerrar sesión?')) {
+                fetch('/auth/logout', {
+                    method: 'POST'
+                }).then(() => {
+                    window.location.href = '/';
+                });
+            }
+        }
+		
+		// FUNCIÓN PRINCIPAL FALTANTE: seleccionarTipoPedidoVendedor
+		function seleccionarTipoPedidoVendedor(tipo) {
+		    console.log('🎯 Seleccionando tipo de pedido:', tipo);
+		    
+		    tipoPedidoSeleccionadoVendedor = tipo;
+		    
+		    // Actualizar interfaz
+		    document.querySelectorAll('.tipo-pedido-card-vendedor').forEach(card => {
+		        card.classList.remove('selected');
+		    });
+		    
+		    // Marcar el tipo seleccionado
+		    const selectedCard = document.querySelector(`[onclick="seleccionarTipoPedidoVendedor('${tipo}')"]`);
+		    if (selectedCard) {
+		        selectedCard.classList.add('selected');
+		    }
+		    
+		    // Mostrar información del tipo seleccionado
+		    const tipoInfo = document.getElementById('tipoSeleccionadoInfoVendedor');
+		    const tipoTexto = tipo === 'PRODUCTO_COMPLETO' ? 'Productos Individuales' : 'Armar PC Personalizada';
+		    tipoInfo.innerHTML = `
+		        <div class="d-flex justify-content-between align-items-center">
+		            <div>
+		                <strong>Tipo seleccionado:</strong> ${tipoTexto}
+		                <br><small class="text-muted">
+		                    ${tipo === 'PRODUCTO_COMPLETO' ? 
+		                      'Selecciona productos individuales del inventario' : 
+		                      'Configura componentes para armar una PC'}
+		                </small>
+		            </div>
+		            <button class="btn btn-sm btn-outline-secondary" onclick="cambiarTipoPedidoVendedor()">
+		                <i class="fas fa-edit me-1"></i>Cambiar
+		            </button>
+		        </div>
+		    `;
+		    tipoInfo.style.display = 'block';
+		    
+		    // Mostrar sección correspondiente
+		    if (tipo === 'PRODUCTO_COMPLETO') {
+		        document.getElementById('seccionProductosCompletosVendedor').style.display = 'block';
+		        document.getElementById('seccionArmarPCVendedor').style.display = 'none';
+		    } else {
+		        document.getElementById('seccionProductosCompletosVendedor').style.display = 'none';
+		        document.getElementById('seccionArmarPCVendedor').style.display = 'block';
+		    }
+		    
+		    // Mostrar sección de resumen
+		    document.getElementById('seccionResumenVendedor').style.display = 'block';
+		    
+		    // Habilitar botón de registrar pago
+		    const btnRegistrarPago = document.getElementById('btnRegistrarPagoVendedor');
+		    if (btnRegistrarPago) {
+		        btnRegistrarPago.disabled = false;
+		    }
+		    
+		    mostrarAlertaVendedor(`Tipo de pedido seleccionado: ${tipoTexto}`, 'success');
+		    actualizarResumenVendedor();
+		}
+
+		// FUNCIÓN FALTANTE: cambiarTipoPedidoVendedor
+		function cambiarTipoPedidoVendedor() {
+		    tipoPedidoSeleccionadoVendedor = null;
+		    productosSeleccionadosVendedor = [];
+		    componentesSeleccionadosVendedor.clear();
+		    
+		    // Ocultar secciones
+		    document.getElementById('tipoSeleccionadoInfoVendedor').style.display = 'none';
+		    document.getElementById('seccionProductosCompletosVendedor').style.display = 'none';
+		    document.getElementById('seccionArmarPCVendedor').style.display = 'none';
+		    document.getElementById('seccionResumenVendedor').style.display = 'none';
+		    
+		    // Deshabilitar botones
+		    document.getElementById('btnRegistrarPagoVendedor').disabled = true;
+		    document.getElementById('btnGenerarPedidoVendedor').disabled = true;
+		    
+		    // Limpiar selecciones
+		    document.querySelectorAll('.tipo-pedido-card-vendedor').forEach(card => {
+		        card.classList.remove('selected');
+		    });
+		    
+		    actualizarResumenVendedor();
+		}
+
+		// FUNCIÓN FALTANTE: abrirModalRegistrarClienteVendedor
+		function abrirModalRegistrarClienteVendedor() {
+		    const modal = new bootstrap.Modal(document.getElementById('registrarClienteModalVendedor'));
+		    modal.show();
+		}
+
+		// FUNCIÓN FALTANTE: registrarNuevoClienteVendedor
+		function registrarNuevoClienteVendedor() {
+		    const dni = document.getElementById('registroDniVendedor').value.trim();
+		    const nombre = document.getElementById('registroNombreVendedor').value.trim();
+		    const apellido = document.getElementById('registroApellidoVendedor').value.trim();
+		    const correo = document.getElementById('registroCorreoVendedor').value.trim();
+		    const telefono = document.getElementById('registroTelefonoVendedor').value.trim();
+		    const direccion = document.getElementById('registroDireccionVendedor').value.trim();
+		    
+		    // Validaciones básicas
+		    if (!dni || !nombre) {
+		        mostrarAlertaClienteVendedor('DNI y nombre son obligatorios', 'warning');
+		        return;
+		    }
+		    
+		    if (dni.length < 8) {
+		        mostrarAlertaClienteVendedor('DNI debe tener al menos 8 dígitos', 'warning');
+		        return;
+		    }
+		    
+		    const btnGuardar = document.getElementById('btnGuardarClienteVendedor');
+		    btnGuardar.disabled = true;
+		    btnGuardar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Registrando...';
+		    
+		    const clienteData = {
+		        dni: dni,
+		        nombre: nombre,
+		        apellido: apellido,
+		        correo: correo || null,
+		        celular: telefono || null,
+		        direccion: direccion || null
+		    };
+		    
+		    fetch('/cliente/api/registrar', {
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json'
+		        },
+		        body: JSON.stringify(clienteData)
+		    })
+		    .then(response => response.json())
+		    .then(data => {
+		        if (data.success) {
+		            mostrarAlertaClienteVendedor('Cliente registrado exitosamente', 'success');
+		            
+		            // Cerrar modal después de 1 segundo
+		            setTimeout(() => {
+		                const modal = bootstrap.Modal.getInstance(document.getElementById('registrarClienteModalVendedor'));
+		                modal.hide();
+		                
+		                // Seleccionar el cliente recién creado
+		                seleccionarClienteVendedor(dni);
+		            }, 1000);
+		        } else {
+		            mostrarAlertaClienteVendedor(data.message || 'Error al registrar cliente', 'danger');
+		        }
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        mostrarAlertaClienteVendedor('Error de conexión al registrar cliente', 'danger');
+		    })
+		    .finally(() => {
+		        btnGuardar.disabled = false;
+		        btnGuardar.innerHTML = '<i class="fas fa-save me-1"></i>Registrar Cliente';
+		    });
+		}
+
+		// FUNCIÓN FALTANTE: mostrarAlertaClienteVendedor
+		function mostrarAlertaClienteVendedor(mensaje, tipo) {
+		    const container = document.getElementById('registrarClienteModalAlertContainerVendedor');
+		    if (!container) {
+		        alert(mensaje);
+		        return;
+		    }
+		    
+		    const alertClass = tipo === 'success' ? 'alert-success' : 
+		                      tipo === 'warning' ? 'alert-warning' : 'alert-danger';
+		    
+		    container.innerHTML = `
+		        <div class="alert ${alertClass} alert-dismissible fade show" role="alert">
+		            <i class="fas fa-info-circle me-2"></i>
+		            ${mensaje}
+		            <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+		        </div>
+		    `;
+		}
+
+		// FUNCIÓN FALTANTE: actualizarResumenVendedor
+		function actualizarResumenVendedor() {
+		    // Actualizar cliente
+		    const resumenCliente = document.getElementById('resumenClienteVendedor');
+		    if (resumenCliente) {
+		        resumenCliente.textContent = clienteSeleccionadoVendedor ? 
+		            clienteSeleccionadoVendedor.nombreCompleto || 
+		            `${clienteSeleccionadoVendedor.nombre} ${clienteSeleccionadoVendedor.apellido || ''}`.trim() : 
+		            '-';
+		    }
+		    
+		    // Actualizar tipo
+		    const resumenTipo = document.getElementById('resumenTipoVendedor');
+		    if (resumenTipo) {
+		        const tipoTexto = tipoPedidoSeleccionadoVendedor === 'PRODUCTO_COMPLETO' ? 
+		            'Productos Individuales' : 
+		            tipoPedidoSeleccionadoVendedor === 'ARMAR_PC' ? 
+		            'Armar PC' : '-';
+		        resumenTipo.textContent = tipoTexto;
+		    }
+		    
+		    // Calcular totales
+		    let totalItems = 0;
+		    let montoTotal = 0;
+		    
+		    if (tipoPedidoSeleccionadoVendedor === 'PRODUCTO_COMPLETO') {
+		        totalItems = productosSeleccionadosVendedor.reduce((sum, producto) => 
+		            sum + (producto.cantidad || 1), 0);
+		        montoTotal = productosSeleccionadosVendedor.reduce((sum, producto) => 
+		            sum + (producto.precio * (producto.cantidad || 1)), 0);
+		    } else if (tipoPedidoSeleccionadoVendedor === 'ARMAR_PC') {
+		        totalItems = componentesSeleccionadosVendedor.size;
+		        montoTotal = Array.from(componentesSeleccionadosVendedor.values())
+		            .reduce((sum, componente) => sum + componente.precio, 0);
+		    }
+		    
+		    // Actualizar resumen
+		    const resumenCantidad = document.getElementById('resumenCantidadVendedor');
+		    const resumenTotal = document.getElementById('resumenTotalVendedor');
+		    
+		    if (resumenCantidad) {
+		        resumenCantidad.textContent = totalItems;
+		    }
+		    
+		    if (resumenTotal) {
+		        resumenTotal.textContent = montoTotal.toFixed(2);
+		    }
+		}
+
+		// FUNCIÓN FALTANTE: limpiarFormularioVendedor
+		function limpiarFormularioVendedor() {
+		    if (confirm('¿Está seguro de que desea limpiar el formulario? Se perderán todos los datos ingresados.')) {
+		        limpiarFormularioCompletoVendedor();
+		        
+		        // Cerrar modal
+		        const modal = bootstrap.Modal.getInstance(document.getElementById('nuevoPedidoModal'));
+		        if (modal) {
+		            modal.hide();
+		        }
+		    }
+		}
+
+		// FUNCIÓN FALTANTE: limpiarFormularioCompletoVendedor
+		function limpiarFormularioCompletoVendedor() {
+		    // Reiniciar variables
+		    clienteSeleccionadoVendedor = null;
+		    tipoPedidoSeleccionadoVendedor = null;
+		    productosSeleccionadosVendedor = [];
+		    componentesSeleccionadosVendedor.clear();
+		    pagoRegistradoVendedor = false;
+		    
+		    // Limpiar campos
+		    document.getElementById('clienteBuscarVendedor').value = '';
+		    if (document.getElementById('productoCodigoVendedor')) {
+		        document.getElementById('productoCodigoVendedor').value = '';
+		    }
+		    if (document.getElementById('productoNombreVendedor')) {
+		        document.getElementById('productoNombreVendedor').value = '';
+		    }
+		    
+		    // Ocultar secciones
+		    document.getElementById('clienteResultadosVendedor').style.display = 'none';
+		    document.getElementById('clienteSeleccionadoInfoVendedor').style.display = 'none';
+		    document.getElementById('seccionTipoPedidoVendedor').style.display = 'none';
+		    document.getElementById('seccionProductosCompletosVendedor').style.display = 'none';
+		    document.getElementById('seccionArmarPCVendedor').style.display = 'none';
+		    document.getElementById('seccionResumenVendedor').style.display = 'none';
+		    
+		    // Deshabilitar botones
+		    const btnRegistrarPago = document.getElementById('btnRegistrarPagoVendedor');
+		    const btnGenerar = document.getElementById('btnGenerarPedidoVendedor');
+		    
+		    if (btnRegistrarPago) btnRegistrarPago.disabled = true;
+		    if (btnGenerar) btnGenerar.disabled = true;
+		    
+		    // Limpiar alertas
+		    document.getElementById('nuevoPedidoModalAlertContainer').innerHTML = '';
+		    
+		    // Actualizar resumen
+		    actualizarResumenVendedor();
+		}
+
+		// FUNCIÓN FALTANTE: buscarProductoPorCodigoVendedor
+		function buscarProductoPorCodigoVendedor() {
+		    const codigo = document.getElementById('productoCodigoVendedor').value.trim();
+		    
+		    if (!codigo) {
+		        mostrarAlertaVendedor('Ingrese un código de producto', 'warning');
+		        return;
+		    }
+		    
+		    fetch(`/producto/api/buscar-por-codigo/${codigo}`)
+		    .then(response => response.json())
+		    .then(data => {
+		        if (data.success && data.data) {
+		            mostrarProductosResultadosVendedor([data.data]);
+		        } else {
+		            mostrarAlertaVendedor('Producto no encontrado', 'warning');
+		        }
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        mostrarAlertaVendedor('Error al buscar producto', 'danger');
+		    });
+		}
+
+		// FUNCIÓN FALTANTE: buscarProductosPorNombreVendedor
+		function buscarProductosPorNombreVendedor() {
+		    const nombre = document.getElementById('productoNombreVendedor').value.trim();
+		    
+		    if (!nombre) {
+		        mostrarAlertaVendedor('Ingrese un nombre de producto', 'warning');
+		        return;
+		    }
+		    
+		    fetch(`/producto/api/buscar-por-nombre?nombre=${encodeURIComponent(nombre)}`)
+		    .then(response => response.json())
+		    .then(data => {
+		        if (data.success && data.data && data.data.length > 0) {
+		            mostrarProductosResultadosVendedor(data.data);
+		        } else {
+		            mostrarAlertaVendedor('No se encontraron productos', 'info');
+		        }
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        mostrarAlertaVendedor('Error al buscar productos', 'danger');
+		    });
+		}
+
+		// FUNCIÓN FALTANTE: buscarProductosPorCategoriaVendedor
+		function buscarProductosPorCategoriaVendedor() {
+		    const categoriaId = document.getElementById('categoriaFiltroVendedor').value;
+		    
+		    if (!categoriaId) {
+		        // Limpiar resultados si no hay categoría seleccionada
+		        document.getElementById('productosResultadosVendedor').style.display = 'none';
+		        return;
+		    }
+		    
+		    fetch(`/producto/api/por-categoria/${categoriaId}`)
+		    .then(response => response.json())
+		    .then(data => {
+		        if (data.success && data.data && data.data.length > 0) {
+		            mostrarProductosResultadosVendedor(data.data);
+		        } else {
+		            mostrarAlertaVendedor('No hay productos en esta categoría', 'info');
+		        }
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        mostrarAlertaVendedor('Error al cargar productos de la categoría', 'danger');
+		    });
+		}
+
+		// FUNCIÓN FALTANTE: mostrarProductosResultadosVendedor
+		function mostrarProductosResultadosVendedor(productos) {
+		    const contenedor = document.getElementById('productosResultadosVendedor');
+		    
+		    if (!productos || productos.length === 0) {
+		        contenedor.innerHTML = '<div class="col-12 text-center py-4"><h6 class="text-muted">No hay productos para mostrar</h6></div>';
+		        contenedor.style.display = 'block';
+		        return;
+		    }
+		    
+		    let html = '';
+		    productos.forEach(producto => {
+		        const stockClass = producto.cantidadStock <= 0 ? 'border-danger' : 
+		                          producto.cantidadStock <= 5 ? 'border-warning' : '';
+		        
+		        html += `
+		            <div class="col-md-4 mb-3">
+		                <div class="card producto-card-vendedor h-100 ${stockClass}" 
+		                     onclick="agregarProductoVendedor(${producto.id})">
+		                    <div class="card-body">
+		                        <h6 class="card-title">${producto.nombre}</h6>
+		                        <p class="card-text">
+		                            <strong>Código:</strong> ${producto.id}<br>
+		                            <strong>Precio:</strong> S/ ${producto.precio.toFixed(2)}<br>
+		                            <strong>Stock:</strong> ${producto.cantidadStock} unidades
+		                        </p>
+		                        <span class="badge ${producto.cantidadStock > 0 ? 'bg-success' : 'bg-danger'}">
+		                            ${producto.cantidadStock > 0 ? 'Disponible' : 'Sin Stock'}
+		                        </span>
+		                    </div>
+		                </div>
+		            </div>
+		        `;
+		    });
+		    
+		    contenedor.innerHTML = html;
+		    contenedor.style.display = 'block';
+		}
+
+		// FUNCIÓN FALTANTE: agregarProductoVendedor
+		function agregarProductoVendedor(productoId) {
+		    // Verificar que no esté ya agregado
+		    const yaAgregado = productosSeleccionadosVendedor.find(p => p.id === productoId);
+		    if (yaAgregado) {
+		        mostrarAlertaVendedor('Este producto ya está agregado', 'warning');
+		        return;
+		    }
+		    
+		    // Buscar información del producto
+		    fetch(`/producto/api/${productoId}`)
+		    .then(response => response.json())
+		    .then(data => {
+		        if (data.success && data.data) {
+		            const producto = data.data;
+		            
+		            if (producto.cantidadStock <= 0) {
+		                mostrarAlertaVendedor('Producto sin stock disponible', 'warning');
+		                return;
+		            }
+		            
+		            // Agregar producto con cantidad 1 por defecto
+		            productosSeleccionadosVendedor.push({
+		                id: producto.id,
+		                codigo: producto.id,
+		                nombre: producto.nombre,
+		                precio: producto.precio,
+		                cantidad: 1,
+		                stockDisponible: producto.cantidadStock
+		            });
+		            
+		            actualizarTablaProductosSeleccionadosVendedor();
+		            actualizarResumenVendedor();
+		            mostrarAlertaVendedor(`Producto agregado: ${producto.nombre}`, 'success');
+		        }
+		    })
+		    .catch(error => {
+		        console.error('Error:', error);
+		        mostrarAlertaVendedor('Error al agregar producto', 'danger');
+		    });
+		}
+
+		// FUNCIÓN FALTANTE: actualizarTablaProductosSeleccionadosVendedor
+		function actualizarTablaProductosSeleccionadosVendedor() {
+		    const tbody = document.getElementById('productosSeleccionadosTableVendedor');
+		    
+		    if (!productosSeleccionadosVendedor || productosSeleccionadosVendedor.length === 0) {
+		        tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted">No hay productos seleccionados</td></tr>';
+		        return;
+		    }
+		    
+		    let html = '';
+		    productosSeleccionadosVendedor.forEach((producto, index) => {
+		        const subtotal = producto.precio * producto.cantidad;
+		        
+		        html += `
+		            <tr>
+		                <td>${producto.codigo}</td>
+		                <td>${producto.nombre}</td>
+		                <td>S/ ${producto.precio.toFixed(2)}</td>
+		                <td>
+		                    <div class="input-group input-group-sm" style="max-width: 120px;">
+		                        <button class="btn btn-outline-secondary btn-sm" 
+		                                onclick="cambiarCantidadProductoVendedor(${index}, -1)">-</button>
+		                        <input type="number" class="form-control text-center" 
+		                               value="${producto.cantidad}" min="1" max="${producto.stockDisponible}"
+		                               onchange="actualizarCantidadProductoVendedor(${index}, this.value)">
+		                        <button class="btn btn-outline-secondary btn-sm" 
+		                                onclick="cambiarCantidadProductoVendedor(${index}, 1)">+</button>
+		                    </div>
+		                </td>
+		                <td>S/ ${subtotal.toFixed(2)}</td>
+		                <td>
+		                    <button class="btn btn-danger btn-sm" onclick="eliminarProductoVendedor(${index})">
+		                        <i class="fas fa-trash"></i>
+		                    </button>
+		                </td>
+		            </tr>
+		        `;
+		    });
+		    
+		    tbody.innerHTML = html;
+		}
+
+		// FUNCIÓN FALTANTE: cambiarCantidadProductoVendedor
+		function cambiarCantidadProductoVendedor(index, cambio) {
+		    const producto = productosSeleccionadosVendedor[index];
+		    const nuevaCantidad = producto.cantidad + cambio;
+		    
+		    if (nuevaCantidad < 1) {
+		        mostrarAlertaVendedor('La cantidad mínima es 1', 'warning');
+		        return;
+		    }
+		    
+		    if (nuevaCantidad > producto.stockDisponible) {
+		        mostrarAlertaVendedor(`Stock máximo disponible: ${producto.stockDisponible}`, 'warning');
+		        return;
+		    }
+		    
+		    producto.cantidad = nuevaCantidad;
+		    actualizarTablaProductosSeleccionadosVendedor();
+		    actualizarResumenVendedor();
+		}
+
+		// FUNCIÓN FALTANTE: actualizarCantidadProductoVendedor
+		function actualizarCantidadProductoVendedor(index, nuevaCantidad) {
+		    const cantidad = parseInt(nuevaCantidad);
+		    const producto = productosSeleccionadosVendedor[index];
+		    
+		    if (isNaN(cantidad) || cantidad < 1) {
+		        mostrarAlertaVendedor('Cantidad debe ser mayor a 0', 'warning');
+		        actualizarTablaProductosSeleccionadosVendedor();
+		        return;
+		    }
+		    
+		    if (cantidad > producto.stockDisponible) {
+		        mostrarAlertaVendedor(`Stock máximo disponible: ${producto.stockDisponible}`, 'warning');
+		        actualizarTablaProductosSeleccionadosVendedor();
+		        return;
+		    }
+		    
+		    producto.cantidad = cantidad;
+		    actualizarTablaProductosSeleccionadosVendedor();
+		    actualizarResumenVendedor();
+		}
+
+		// FUNCIÓN FALTANTE: eliminarProductoVendedor
+		function eliminarProductoVendedor(index) {
+		    const producto = productosSeleccionadosVendedor[index];
+		    
+		    if (confirm(`¿Eliminar ${producto.nombre} del pedido?`)) {
+		        productosSeleccionadosVendedor.splice(index, 1);
+		        actualizarTablaProductosSeleccionadosVendedor();
+		        actualizarResumenVendedor();
+		        mostrarAlertaVendedor('Producto eliminado del pedido', 'info');
+		    }
+		}
+    </script>
+	
+	<script th:src="@{/js/vendedor-modal.js}"></script>
+</body>
+</html>

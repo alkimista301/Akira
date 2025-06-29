@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Checkout - AkiraComputer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+    <!-- Include Header -->
+    <div th:replace="~{header :: header}"></div>
+
+    <div class="container mt-4 mb-5">
+        <div class="row">
+            <div class="col-lg-8">
+                <!-- Header del Checkout -->
+                <div class="card mb-4">
+                    <div class="card-header bg-primary text-white">
+                        <h4 class="mb-0">
+                            <i class="fas fa-shopping-cart me-2"></i>Finalizar Compra
+                        </h4>
+                    </div>
+                    <div class="card-body">
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Información del Cliente</h6>
+                                <p class="mb-1"><strong>Nombre:</strong> <span th:text="${cliente.nombreCompleto}">Cliente</span></p>
+                                <p class="mb-1"><strong>DNI:</strong> <span th:text="${cliente.dni}">DNI</span></p>
+                                <p class="mb-0"><strong>Correo:</strong> <span th:text="${cliente.correo ?: 'No especificado'}">correo</span></p>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="checkout-stats text-end">
+                                    <p class="mb-1">Items en carrito: <span class="fw-bold" id="totalItems">0</span></p>
+                                    <p class="mb-0">Total estimado: <span class="fw-bold text-primary fs-5" id="totalEstimado">S/ 0.00</span></p>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Productos del Checkout -->
+                <div class="card">
+                    <div class="card-header">
+                        <h5 class="mb-0">
+                            <i class="fas fa-list me-2"></i>Productos Seleccionados
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <!-- Contenedor de productos -->
+                        <div id="productosCheckoutContainer">
+                            <div class="text-center py-4" id="carritoVacioMsg">
+                                <i class="fas fa-shopping-cart fa-3x text-muted mb-3"></i>
+                                <h5 class="text-muted">No hay productos en el carrito</h5>
+                                <a href="/productos" class="btn btn-primary">
+                                    <i class="fas fa-plus me-2"></i>Agregar Productos
+                                </a>
+                            </div>
+
+                            <!-- Tabla de productos -->
+                            <div id="tablaProductosCheckout" style="display: none;">
+                                <div class="table-responsive">
+                                    <table class="table table-striped">
+                                        <thead class="table-dark">
+                                            <tr>
+                                                <th>Producto</th>
+                                                <th class="text-center">Precio Unit.</th>
+                                                <th class="text-center">Cantidad</th>
+                                                <th class="text-center">Subtotal</th>
+                                                <th class="text-center">Acciones</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="productosCheckoutTable">
+                                            <!-- Se llena dinámicamente -->
+                                        </tbody>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Resumen del Pedido -->
+            <div class="col-lg-4">
+                <div class="card position-sticky" style="top: 20px;">
+                    <div class="card-header bg-success text-white">
+                        <h5 class="mb-0">
+                            <i class="fas fa-receipt me-2"></i>Resumen del Pedido
+                        </h5>
+                    </div>
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Subtotal:</span>
+                            <span id="resumenSubtotal">S/ 0.00</span>
+                        </div>
+                        <div class="d-flex justify-content-between mb-2">
+                            <span>Cantidad de productos:</span>
+                            <span id="resumenCantidad">0</span>
+                        </div>
+                        <hr>
+                        <div class="d-flex justify-content-between mb-3">
+                            <strong>Total:</strong>
+                            <strong class="text-success fs-5" id="resumenTotal">S/ 0.00</strong>
+                        </div>
+
+                        <!-- Observaciones -->
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones (opcional)</label>
+                            <textarea class="form-control" id="observaciones" rows="3" 
+                                      placeholder="Instrucciones especiales para el pedido..."></textarea>
+                        </div>
+
+                        <!-- Botón de confirmar pedido -->
+						<button class="btn btn-primary w-100 btn-lg" id="btnConfirmarPago" 
+						        onclick="abrirModalPago()" disabled>
+						    <i class="fas fa-credit-card me-2"></i>Confirmar Pago
+						</button>
+
+                        <div class="mt-3">
+                            <small class="text-muted">
+                                <i class="fas fa-info-circle me-1"></i>
+                                Al confirmar el pedido, recibirás un código de seguimiento.
+                            </small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación -->
+    <div class="modal fade" id="confirmacionModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header bg-success text-white">
+                    <h5 class="modal-title">
+                        <i class="fas fa-check-circle me-2"></i>Pedido Confirmado
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center py-4" id="confirmacionContent">
+                        <!-- Contenido dinámico -->
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-primary" onclick="irDashboardCliente()">
+                        <i class="fas fa-tachometer-alt me-2"></i>Ir a Mi Dashboard
+                    </button>
+                    <button type="button" class="btn btn-secondary" onclick="continuarComprando()">
+                        <i class="fas fa-shopping-cart me-2"></i>Continuar Comprando
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+	
+	<!-- Modal de Pago -->
+	<div class="modal fade" id="modalPago" tabindex="-1">
+	    <div class="modal-dialog">
+	        <div class="modal-content">
+	            <div class="modal-header">
+	                <h5 class="modal-title">Confirmar Pago</h5>
+	                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+	            </div>
+	            <div class="modal-body">
+	                <div class="row">
+	                    <div class="col-md-6">
+	                        <label for="selectBanco" class="form-label">Banco *</label>
+	                        <select class="form-control" id="selectBanco" required>
+	                            <option value="">Seleccione un banco...</option>
+	                        </select>
+	                    </div>
+	                    <div class="col-md-6">
+	                        <label for="inputNumeroOperacion" class="form-label">Número de Operación *</label>
+	                        <input type="text" class="form-control" id="inputNumeroOperacion" required>
+	                    </div>
+	                </div>
+	                <div id="alertaPago" class="mt-3"></div>
+	            </div>
+	            <div class="modal-footer">
+	                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+	                <button type="button" class="btn btn-success" onclick="procesarPago()">Confirmar Pago</button>
+	            </div>
+	        </div>
+	    </div>
+	</div>
+
+    <!-- Include Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+
+	<!--  JS (Checkout) -->
+	<script th:src="@{/js/checkout.js}"></script>
+
+</body>
+</html>

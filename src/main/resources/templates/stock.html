@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock - AkiraComputer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+	<script th:src="@{/js/modalStock.js}"></script>
+</head>
+<body>
+    <!-- Include Header -->
+    <div th:replace="~{header :: header}"></div>
+
+    <!-- Stock Section -->
+    <section class="stock-section">
+        <div class="container">
+            <h1 class="stock-title">STOCK PRODUCTOS</h1>
+            
+            <!-- Search Bar -->
+            <div class="search-container">
+                <label class="search-label">Código/Nombre</label>
+                <input type="text" class="search-input" id="searchInput" placeholder="Buscar por código o nombre...">
+                <button class="search-btn" onclick="buscarProducto()">
+                    <i class="fas fa-search"></i>
+                </button>
+                <button class="search-btn" onclick="limpiarBusqueda()" title="Limpiar búsqueda">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-descargar" onclick="descargarStock()">
+                    <i class="fas fa-download me-2"></i>Descargar Stock
+                </button>
+                <button class="btn btn-gestionar" onclick="abrirModalNuevoProducto()">
+                    <i class="fas fa-plus me-2"></i>Agregar Producto
+                </button>
+            </div>
+            
+            <!-- Alerts Container -->
+            <div id="alertContainer"></div>
+            
+            <!-- Stock Table -->
+            <div class="stock-table">
+                <table class="table table-bordered mb-0">
+                    <thead>
+                        <tr>
+                            <th>Código</th>
+                            <th>Producto</th>
+                            <th>Cantidad</th>
+                            <th>Ubicación</th>
+                            <th>Categoría</th>
+                            <th>Marca</th>
+                            <th>Modelo</th>
+                            <th>Precio</th>
+                            <th colspan="2">Acciones</th>
+                        </tr>
+                    </thead>
+					<tbody id="productosTable">
+					    <!-- Agregar data-codigo para el caché -->
+					    <tr th:each="producto : ${productos}" th:data-codigo="${producto.codigo}">
+					        <td th:text="${producto.codigo}"></td>
+					        <td th:text="${producto.nombre}"></td>
+					        <td th:text="${producto.cantidad}"></td>
+					        <td th:text="${producto.categoria?.estante ?: 'No asignado'}"></td>
+					        <td class="categoria-cell" th:text="${producto.categoria?.nombre ?: 'Sin categoría'}"></td>
+					        <td th:text="${producto.marca?.nombre ?: 'Sin marca'}"></td>
+					        <td th:text="${producto.modelo ?: 'Sin modelo'}"></td>
+					        <td th:text="'S/ ' + ${#numbers.formatDecimal(producto.precio, 0, 2)}"></td>
+					        <td class="action-cell">
+					            <button class="btn-edit" th:onclick="'editarProducto(' + ${producto.codigo} + ')'" title="Editar">
+					                <i class="fas fa-edit"></i>
+					            </button>
+					        </td>
+					        <td class="action-cell">
+					            <button class="btn-delete" th:onclick="'eliminarProducto(' + ${producto.codigo} + ')'" title="Eliminar">
+					                <i class="fas fa-trash-alt"></i>
+					            </button>
+					        </td>
+					    </tr>
+					    
+					    <tr th:if="${#lists.isEmpty(productos)}">
+					        <td colspan="10" style="text-align: center;">No hay productos en stock</td>
+					    </tr>
+					</tbody>
+                </table>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal de Producto -->
+    <div class="modal fade" id="productoModal" tabindex="-1" aria-labelledby="productoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title" id="productoModalLabel">
+                        <i class="fas fa-box me-2"></i>
+                        <span id="modalTitle">Nuevo Producto</span>
+                    </h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <!-- Alertas del modal -->
+                    <div id="modalAlertContainer"></div>
+                    
+                    <!-- Formulario -->
+                    <form id="productoForm" novalidate>
+                        <input type="hidden" id="productoCodigo" name="codigo">
+                        
+                        <div class="row">
+                            <!-- Información básica -->
+                            <div class="col-12">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-info-circle me-2"></i>Información Básica
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="productoNombre" class="form-label required-field">Nombre del Producto</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="productoNombre" 
+                                           name="nombre"
+                                           placeholder="Ej: Laptop Dell Inspiron 15"
+                                           required>
+                                    <div class="invalid-feedback">
+                                        Por favor ingresa el nombre del producto.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="productoCantidad" class="form-label required-field">Cantidad en Stock</label>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="productoCantidad" 
+                                               name="cantidadStock"
+                                               min="0"
+                                               placeholder="0"
+                                               required>
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        Por favor ingresa una cantidad válida.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Información comercial -->
+                            <div class="col-12 mt-3">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-dollar-sign me-2"></i>Información Comercial
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="productoPrecio" class="form-label required-field">Precio (S/)</label>
+                                    <div class="input-group">
+                                        <input type="number" 
+                                               class="form-control" 
+                                               id="productoPrecio" 
+                                               name="precio"
+                                               step="0.01"
+                                               min="0"
+                                               placeholder="0.00"
+                                               required>
+                                    </div>
+                                    <div class="invalid-feedback">
+                                        Por favor ingresa un precio válido.
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="productoCategoria" class="form-label">Categoría</label>
+                                    <select class="form-control" id="productoCategoria" name="categoria.id">
+                                        <option value="">Seleccionar categoría...</option>
+                                        <!-- Las categorías se cargarán dinámicamente -->
+                                    </select>
+                                    <div class="categoria-info" id="categoriaInfo" style="display: none;">
+                                        <i class="fas fa-map-marker-alt me-1"></i>
+                                        <span id="categoriaEstante"></span>
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Información técnica -->
+                            <div class="col-12 mt-3">
+                                <h6 class="text-muted mb-3">
+                                    <i class="fas fa-cogs me-2"></i>Información Técnica
+                                </h6>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="productoMarca" class="form-label">Marca</label>
+                                    <select class="form-control" id="productoMarca" name="marca.idMarca">
+                                        <option value="">Seleccionar marca...</option>
+                                        <!-- Las marcas se cargarán dinámicamente -->
+                                    </select>
+                                </div>
+                            </div>
+                            
+                            <div class="col-md-6">
+                                <div class="form-group">
+                                    <label for="productoModelo" class="form-label">Modelo</label>
+                                    <input type="text" 
+                                           class="form-control" 
+                                           id="productoModelo" 
+                                           name="modelo"
+                                           placeholder="Ej: Inspiron 15 3000, G502 HERO"
+                                           maxlength="100">
+                                    <div class="form-text">
+                                        Modelo específico del producto (opcional)
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <!-- Descripción -->
+                            <div class="col-12 mt-3">
+                                <div class="form-group">
+                                    <label for="productoDescripcion" class="form-label">Descripción</label>
+                                    <textarea class="form-control" 
+                                              id="productoDescripcion" 
+                                              name="descripcion"
+                                              rows="3"
+                                              maxlength="500"
+                                              placeholder="Descripción detallada del producto (opcional)"></textarea>
+                                    <div class="form-text text-end">
+                                        <span id="contadorCaracteres">0/500 caracteres</span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-primary-custom" onclick="guardarProducto()">
+                        <i class="fas fa-save me-2"></i>
+                        <span id="btnGuardarText">Guardar Producto</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal de Confirmación de Eliminación -->
+    <div class="modal fade" id="eliminarModal" tabindex="-1" aria-labelledby="eliminarModalLabel" aria-hidden="true">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header bg-danger text-white">
+                    <h5 class="modal-title" id="eliminarModalLabel">
+                        <i class="fas fa-exclamation-triangle me-2"></i>Confirmar Eliminación
+                    </h5>
+                    <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="text-center">
+                        <i class="fas fa-trash-alt fa-3x text-danger mb-3"></i>
+                        <h5>¿Está seguro de eliminar este producto?</h5>
+                        <p class="text-muted mb-0">Esta acción no se puede deshacer.</p>
+                        <p class="mt-2"><strong>Producto:</strong> <span id="productoEliminar"></span></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+                        <i class="fas fa-times me-2"></i>Cancelar
+                    </button>
+                    <button type="button" class="btn btn-danger" id="confirmarEliminar">
+                        <i class="fas fa-trash-alt me-2"></i>Eliminar Producto
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Include Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+
+    <!-- Bootstrap JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+</body>
+</html>

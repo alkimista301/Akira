@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>PC Gamer Haku Red Ryzen 7 5700G - AkiraComputer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+    <!-- Include Header -->
+    <div th:replace="~{header :: header}"></div>
+	
+    <!-- Product Detail Section -->
+    <section class="product-detail-section">
+        <div class="container">
+            <div class="product-container">
+                <div class="row g-0">
+                    <div class="col-lg-6">
+                        <div class="details-product-image-container">
+                            <img th:src="@{/images/laptop.png}" alt="PC Gamer Haku Red Ryzen 7 5700G" class="product-main-image">
+                            <div class="zoom-icon">
+                                <i class="fas fa-search-plus"></i>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="col-lg-6">
+                        <div class="product-info">
+                            <p class="vendor-recommendation">Recomendación del Vendedor</p>
+                            <h1 class="details-product-title">PC Gamer Haku Red Ryzen 7 5700G</h1>
+                            <div class="product-price">s/1,899</div>
+                            
+                            <div class="specs-section">
+                                <ul class="specs-list">
+                                    <li>AMD Ryzen 7 5700G 3.8GHz/4.6GHz</li>
+                                    <li>8 núcleos, 16 hilos, 16MB caché L3</li>
+                                    <li>AM4, 65W</li>
+                                    <li>Disco Sólido SSD 500GB</li>
+                                    <li>Memoria RAM 8GB DDR4</li>
+                                    <li>Tarjeta Madre A520</li>
+                                    <li>Radeon™ Graphics</li>
+                                    <li>Monitor Plano FHD 22"</li>
+                                    <li>Fuente de Poder Real 350W</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="specs-section">
+                                <ul class="specs-list">
+                                    <li><strong>KIT GAMER TEROS:</strong></li>
+                                    <li>Teclado + Mouse</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="specs-section">
+                                <ul class="specs-list">
+                                    <li><strong>CYBER PC</strong></li>
+                                    <li>Llévate gratis</li>
+                                    <li>+Audicular</li>
+                                    <li>+Pad mouse</li>
+                                </ul>
+                            </div>
+                            
+                            <div class="warranty-info">
+                                Garantía 1 año
+                            </div>
+                            
+                            <button class="btn btn-realizar-pedido">
+                                <i class="fas fa-shopping-cart me-2"></i>Realizar Pedido
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Related Products Section -->
+            <div class="related-products">
+                <h3>Otros Productos En La Misma Categoría</h3>
+            </div>
+        </div>
+    </section>
+
+    <!-- Include Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+
+	<!-- detalleProducto -->
+	<script th:src="@{/js/detalleProducto.js}"></script>
+
+</body>
+</html>

@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dashboard Técnico - Akira Computer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 2px 0;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .main-content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+        .btn-complete {
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            border: none;
+            color: white;
+        }
+        .btn-complete:hover {
+            background: linear-gradient(135deg, #20c997 0%, #28a745 100%);
+            color: white;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .priority-high {
+            border-left: 4px solid #dc3545;
+        }
+        .priority-medium {
+            border-left: 4px solid #ffc107;
+        }
+        .priority-low {
+            border-left: 4px solid #28a745;
+        }
+        .task-card {
+            background: white;
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 15px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .task-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 20px rgba(0,0,0,0.15);
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-0">
+                <div class="p-3">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-tools fa-2x mb-2"></i>
+                        <h5>Panel Técnico</h5>
+                        <small th:text="${usuario.nombreCompleto}">Técnico Name</small>
+                    </div>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#dashboard">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <hr class="my-3">
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Header -->
+                <div class="d-flex justify-content-between align-items-center mb-4">
+                    <h2><i class="fas fa-tools me-2"></i>Dashboard Técnico</h2>
+                    <div class="d-flex align-items-center">
+                        <div class="user-avatar me-2" th:text="${usuario.nombre.substring(0,1)}">T</div>
+                        <span th:text="${usuario.nombreCompleto}">Técnico Name</span>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <h4 id="misAsignados" th:text="${#lists.size(misAsignados)}">0</h4>
+                            <small class="text-muted">Pedidos Asignados</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-success mb-2">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <h4 id="completadosHoy">0</h4>
+                            <small class="text-muted">Completados Hoy</small>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-info mb-2">
+                                <i class="fas fa-trophy fa-2x"></i>
+                            </div>
+                            <h4 id="totalCompletados">0</h4>
+                            <small class="text-muted">Total Completados</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mis Pedidos Asignados -->
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-3">
+                        <h5><i class="fas fa-tasks me-2"></i>Mis Pedidos Asignados</h5>
+                        <button class="btn btn-success btn-sm" onclick="refreshData()">
+                            <i class="fas fa-sync-alt me-1"></i>Actualizar
+                        </button>
+                    </div>
+
+                    <div class="row">
+                        <div th:each="pedido : ${misAsignados}" class="col-12 mb-3">
+                            <div class="task-card priority-medium">
+                                <div class="row align-items-center">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center mb-2">
+                                            <span class="badge bg-primary me-2" th:text="'#' + ${pedido.id}">#001</span>
+                                            <span class="badge bg-info me-2" th:text="${pedido.tipoPedido}">ARMAR_PC</span>
+                                            <small class="text-muted" th:text="${#temporals.format(pedido.fechaAsignacion, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:30</small>
+                                        </div>
+                                        
+                                        <h6 class="mb-1" th:text="'Cliente: ' + ${pedido.cliente.nombreCompleto}">Cliente: Juan Pérez</h6>
+                                        <p class="text-muted mb-1" th:text="'Total: S/ ' + ${pedido.total}">Total: S/ 1,500.00</p>
+                                        
+                                        <div th:if="${pedido.detallesComponentes}" class="mt-2">
+                                            <small class="text-muted">
+                                                <strong>Componentes:</strong>
+                                                <span th:text="${#strings.abbreviate(pedido.detallesComponentes, 100)}">Intel i7, RTX 4060...</span>
+                                            </small>
+                                        </div>
+                                        
+                                        <div th:if="${pedido.vendedorAsignado}" class="mt-2">
+                                            <small class="text-success">
+                                                <i class="fas fa-user-tie me-1"></i>
+                                                Vendedor: <span th:text="${pedido.vendedorAsignado.nombreCompleto}">María García</span>
+                                            </small>
+                                        </div>
+                                    </div>
+                                    
+                                    <div class="col-md-4 text-end">
+                                        <button class="btn btn-complete" 
+                                                th:onclick="'marcarAtendido(' + ${pedido.id} + ')'">
+                                            <i class="fas fa-check me-1"></i>Marcar como Atendido
+                                        </button>
+                                        
+                                        <div class="mt-2">
+                                            <button class="btn btn-outline-info btn-sm" 
+                                                    th:onclick="'verDetalles(' + ${pedido.id} + ')'">
+                                                <i class="fas fa-eye me-1"></i>Ver Detalles
+                                            </button>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(misAsignados)}" class="text-center py-5 text-muted">
+                        <i class="fas fa-clipboard-check fa-3x mb-3"></i>
+                        <h5>¡Excelente trabajo!</h5>
+                        <p>No tienes pedidos pendientes asignados</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Marcar Atendido -->
+    <div class="modal fade" id="atendidoModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Marcar Pedido como Atendido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <form id="atendidoForm">
+                        <input type="hidden" id="pedidoIdAtendido">
+                        
+                        <div class="mb-3">
+                            <label for="observaciones" class="form-label">Observaciones del Trabajo Realizado</label>
+                            <textarea class="form-control" id="observaciones" rows="4" 
+                                      placeholder="Describe el trabajo realizado, componentes instalados, pruebas efectuadas, etc."></textarea>
+                        </div>
+                        
+                        <div class="alert alert-info">
+                            <i class="fas fa-info-circle me-2"></i>
+                            Al marcar como atendido, el pedido pasará al vendedor para su finalización.
+                        </div>
+                    </form>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancelar</button>
+                    <button type="button" class="btn btn-success" onclick="confirmarAtendido()">
+                        <i class="fas fa-check me-1"></i>Marcar como Atendido
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Ver Detalles -->
+    <div class="modal fade" id="detallesModal" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Detalles del Pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="detallesContent">
+                    <!-- Contenido dinámico -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+		// ✅ FUNCIONES CORREGIDAS PARA EL DASHBOARD DEL TÉCNICO
+
+		// Cargar estadísticas al iniciar
+		document.addEventListener('DOMContentLoaded', function() {
+		    loadTechnicianStats();
+		});
+
+		function loadTechnicianStats() {
+		    // Obtener ID del técnico actual desde el servidor
+		    const usuarioId = /*[[${usuario.id}]]*/ '';
+		    
+		    // Simular carga de estadísticas adicionales
+		    fetch('/orden-pedido/tecnico/' + usuarioId)
+		        .then(response => response.json())
+		        .then(data => {
+		            if (data.success) {
+		                console.log('✅ Estadísticas del técnico cargadas correctamente');
+		            }
+		        })
+		        .catch(error => console.error('Error loading stats:', error));
+		}
+
+		/**
+		 * Función para marcar pedido como atendido
+		 * @param {number} pedidoId - ID del pedido a marcar como atendido
+		 */
+		function marcarAtendido(pedidoId) {
+		    console.log('🔧 Marcando pedido como atendido:', pedidoId);
+		    
+		    // Validar que el ID sea válido
+		    if (!pedidoId || isNaN(pedidoId)) {
+		        alert('Error: ID de pedido inválido');
+		        return;
+		    }
+		    
+		    // Llenar el ID en el modal y mostrar
+		    document.getElementById('pedidoIdAtendido').value = pedidoId;
+		    
+		    // Limpiar el textarea de observaciones
+		    document.getElementById('observaciones').value = '';
+		    
+		    // Mostrar el modal
+		    const modal = new bootstrap.Modal(document.getElementById('atendidoModal'));
+		    modal.show();
+		}
+
+		/**
+		 * Función para confirmar que el trabajo está atendido
+		 */
+		function confirmarAtendido() {
+		    const pedidoId = document.getElementById('pedidoIdAtendido').value;
+		    const observaciones = document.getElementById('observaciones').value.trim();
+		    
+		    console.log('🔧 Confirmando atención del pedido:', pedidoId);
+		    
+		    // Validar observaciones
+		    if (!observaciones) {
+		        alert('Por favor ingrese las observaciones del trabajo realizado');
+		        document.getElementById('observaciones').focus();
+		        return;
+		    }
+		    
+		    if (observaciones.length < 10) {
+		        alert('Las observaciones deben tener al menos 10 caracteres');
+		        document.getElementById('observaciones').focus();
+		        return;
+		    }
+		    
+		    // Deshabilitar botón para evitar doble envío
+		    const btnConfirmar = document.querySelector('#atendidoModal .btn-success');
+		    const textoOriginal = btnConfirmar.innerHTML;
+		    btnConfirmar.disabled = true;
+		    btnConfirmar.innerHTML = '<i class="fas fa-spinner fa-spin me-1"></i>Procesando...';
+		    
+		    // Enviar datos al servidor
+		    fetch('/orden-pedido/atender/' + pedidoId, {
+		        method: 'POST',
+		        headers: {
+		            'Content-Type': 'application/json',
+		        },
+		        body: JSON.stringify({
+		            observaciones: observaciones
+		        })
+		    })
+		    .then(response => {
+		        console.log('📡 Respuesta del servidor:', response.status);
+		        return response.json();
+		    })
+		    .then(data => {
+		        console.log('📡 Datos recibidos:', data);
+		        
+		        if (data.success) {
+		            // Éxito - cerrar modal y recargar
+		            alert('✅ Pedido marcado como atendido exitosamente');
+		            
+		            // Cerrar modal
+		            const modal = bootstrap.Modal.getInstance(document.getElementById('atendidoModal'));
+		            modal.hide();
+		            
+		            // Recargar la página para mostrar cambios
+		            setTimeout(() => {
+		                location.reload();
+		            }, 1000);
+		            
+		        } else {
+		            // Error del servidor
+		            alert('❌ Error: ' + (data.message || 'Error desconocido al procesar la solicitud'));
+		        }
+		    })
+		    .catch(error => {
+		        console.error('❌ Error en la petición:', error);
+		        alert('❌ Error de conexión: ' + error.message);
+		    })
+		    .finally(() => {
+		        // Restaurar botón siempre
+		        btnConfirmar.disabled = false;
+		        btnConfirmar.innerHTML = textoOriginal;
+		    });
+		}
+
+		/**
+		 * Función para ver detalles del pedido
+		 * @param {number} pedidoId - ID del pedido
+		 */
+		function verDetalles(pedidoId) {
+		    console.log('👀 Viendo detalles del pedido:', pedidoId);
+		    
+		    // Mostrar indicador de carga
+		    document.getElementById('detallesContent').innerHTML = `
+		        <div class="text-center">
+		            <i class="fas fa-spinner fa-spin fa-2x mb-3"></i>
+		            <p>Cargando detalles del pedido...</p>
+		        </div>
+		    `;
+		    
+		    // Mostrar modal
+		    const modal = new bootstrap.Modal(document.getElementById('detallesModal'));
+		    modal.show();
+		    
+		    // Cargar detalles
+		    fetch('/orden-pedido/buscar/' + pedidoId)
+		    .then(response => response.json())
+		    .then(data => {
+		        if (data.success && data.data) {
+		            mostrarDetallesEnModal(data.data);
+		        } else {
+		            document.getElementById('detallesContent').innerHTML = `
+		                <div class="alert alert-danger">
+		                    <i class="fas fa-exclamation-triangle me-2"></i>
+		                    Error al cargar los detalles: ${data.message || 'Error desconocido'}
+		                </div>
+		            `;
+		        }
+		    })
+		    .catch(error => {
+		        console.error('Error al cargar detalles:', error);
+		        document.getElementById('detallesContent').innerHTML = `
+		            <div class="alert alert-danger">
+		                <i class="fas fa-exclamation-triangle me-2"></i>
+		                Error de conexión al cargar los detalles
+		            </div>
+		        `;
+		    });
+		}
+
+		// Función para cerrar sesión del técnico
+		function logout() {
+		    if (confirm('¿Estás seguro que deseas cerrar sesión?')) {
+		        // Hacer petición POST al endpoint de logout
+		        fetch('/auth/logout', {
+		            method: 'POST',
+		            headers: {
+		                'Content-Type': 'application/json',
+		            }
+		        })
+		        .then(response => response.json())
+		        .then(data => {
+		            if (data.success) {
+		                // Logout exitoso - redirigir al login
+		                alert('Sesión cerrada exitosamente');
+		                window.location.href = data.redirectUrl || '/auth/login';
+		            } else {
+		                // Error en el logout
+		                alert('Error al cerrar sesión: ' + data.message);
+		            }
+		        })
+		        .catch(error => {
+		            console.error('Error al cerrar sesión:', error);
+		            alert('Error de conexión al cerrar sesión');
+		        });
+		    }
+		}
+		
+		/**
+		 * Función auxiliar para mostrar detalles en el modal
+		 * @param {object} pedido - Datos del pedido
+		 */
+		function mostrarDetallesEnModal(pedido) {
+		    const cliente = pedido.cliente || {};
+		    const fecha = pedido.fecha ? new Date(pedido.fecha).toLocaleDateString('es-PE') : 'No disponible';
+		    const total = pedido.total ? `S/ ${parseFloat(pedido.total).toFixed(2)}` : 'S/ 0.00';
+		    
+		    document.getElementById('detallesContent').innerHTML = `
+		        <div class="row">
+		            <div class="col-md-6">
+		                <h6><i class="fas fa-info-circle me-2"></i>Información General</h6>
+		                <p><strong>Código:</strong> ${pedido.id || 'N/A'}</p>
+		                <p><strong>Fecha:</strong> ${fecha}</p>
+		                <p><strong>Estado:</strong> <span class="badge bg-info">${pedido.estado?.descripcion || 'N/A'}</span></p>
+		                <p><strong>Total:</strong> ${total}</p>
+		                <p><strong>Tipo:</strong> ${pedido.tipoPedido || 'N/A'}</p>
+		            </div>
+		            <div class="col-md-6">
+		                <h6><i class="fas fa-user me-2"></i>Cliente</h6>
+		                <p><strong>Nombre:</strong> ${cliente.nombre || 'N/A'} ${cliente.apellido || ''}</p>
+		                <p><strong>DNI:</strong> ${cliente.dni || 'N/A'}</p>
+		                <p><strong>Correo:</strong> ${cliente.correo || 'N/A'}</p>
+		                <p><strong>Teléfono:</strong> ${cliente.celular || 'N/A'}</p>
+		            </div>
+		        </div>
+		        
+		        ${pedido.detallesComponentes ? `
+		            <div class="mt-3">
+		                <h6><i class="fas fa-list me-2"></i>Componentes/Productos</h6>
+		                <p class="text-muted">${pedido.detallesComponentes}</p>
+		            </div>
+		        ` : ''}
+		        
+		        ${pedido.observaciones ? `
+		            <div class="mt-3">
+		                <h6><i class="fas fa-clipboard me-2"></i>Observaciones</h6>
+		                <p class="text-muted">${pedido.observaciones}</p>
+		            </div>
+		        ` : ''}
+		    `;
+		}
+    </script>
+</body>
+</html>

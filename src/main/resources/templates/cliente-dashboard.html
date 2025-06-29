@@ -1,0 +1,433 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Dashboard - AkiraComputer</title>
+    
+    <!-- Bootstrap 5 CSS -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <!-- CSS personalizado -->
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+ 
+</head>
+<body>
+    <!-- Header -->
+    <div th:replace="~{header :: header}"></div>
+
+    <!-- Dashboard Section -->
+    <section class="dashboard-section">
+        <div class="container">
+            <!-- Welcome Banner -->
+            <div class="welcome-banner">
+                <div class="row align-items-center">
+                    <div class="col-md-8 text-start">
+                        <h1><i class="fas fa-hand-wave me-3"></i>¡Hola, <span th:text="${cliente.nombre}">Cliente</span>!</h1>
+                        <p class="lead mb-0">Bienvenido a tu panel personal.</p>
+                    </div>
+                    <div class="col-md-4 text-end">
+                        <a href="/categorias" class="action-btn">
+                            <i class="fas fa-shopping-cart me-2"></i>Hacer Pedido
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <div class="row">
+                <!-- Sidebar -->
+                <div class="col-md-3">
+                    <div class="sidebar-dashboard">
+                        <nav class="nav flex-column">
+                            <a class="nav-link active" href="#" onclick="mostrarSeccion('pedidos')">
+                                <i class="fas fa-box me-2"></i>Mis Pedidos
+                            </a>
+                            <a class="nav-link" href="#" onclick="mostrarSeccion('perfil')">
+                                <i class="fas fa-user me-2"></i>Mi Perfil
+                            </a>
+                            <hr class="my-3">
+                            <a class="nav-link" href="#" onclick="logout()">
+                                <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                            </a>
+                        </nav>
+                    </div>
+                </div>
+
+                <!-- Main Content -->
+                <div class="col-md-9">
+                    <!-- Stats Cards -->
+                    <div class="row mb-4">
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-number text-primary" th:text="${estadisticas.totalPedidos}">0</div>
+                                <small class="text-muted">Total Pedidos</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-number text-warning" th:text="${estadisticas.pedidosEnProceso}">0</div>
+                                <small class="text-muted">En Proceso</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="stats-card">
+                                <div class="stats-number text-success" th:text="${estadisticas.pedidosCompletados}">0</div>
+                                <small class="text-muted">Completados</small>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Sección Mis Pedidos -->
+                    <div id="seccionPedidos" class="pedidos-section">
+                        <h3><i class="fas fa-box me-2"></i>Mis Pedidos</h3>
+                        
+                        <div th:if="${misPedidos != null and #lists.size(misPedidos) > 0}">
+                            <div class="table-responsive">
+                                <table class="table table-hover">
+                                    <thead>
+                                        <tr>
+                                            <th>Código</th>
+                                            <th>Fecha</th>
+                                            <th>Total</th>
+                                            <th>Estado</th>
+                                            <th>Acciones</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody>
+                                        <tr th:each="pedido : ${misPedidos}">
+                                            <td th:text="${pedido.codigo}">PED-001</td>
+                                            <td th:text="${#temporals.format(pedido.fecha, 'dd/MM/yyyy')}">01/01/2025</td>
+                                            <td th:text="'S/ ' + ${#numbers.formatDecimal(pedido.total, 0, 2)}">S/ 0.00</td>
+                                            <td>
+                                                <span class="badge" 
+                                                      th:class="${pedido.estado.descripcion == 'Pendiente' ? 'bg-warning' : 
+                                                                pedido.estado.descripcion == 'En Proceso' ? 'bg-info' : 
+                                                                pedido.estado.descripcion == 'Completado' ? 'bg-success' : 'bg-secondary'}"
+                                                      th:text="${pedido.estado.descripcion}">Estado</span>
+                                            </td>
+                                            <td>
+                                                <button class="btn btn-sm btn-success" 
+                                                        th:onclick="'descargarPedido(' + ${pedido.id} + ')'">
+                                                    <i class="fas fa-download"></i> Descargar
+                                                </button>
+                                            </td>
+                                        </tr>
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                        
+                        <div th:if="${misPedidos == null or #lists.size(misPedidos) == 0}" class="no-pedidos">
+                            <i class="fas fa-box-open"></i>
+                            <h4>No tienes pedidos aún</h4>
+                            <p>¡Explora nuestro catálogo y haz tu primer pedido!</p>
+                            <a href="/categorias" class="action-btn">
+                                <i class="fas fa-shopping-cart me-2"></i>Ver Catálogo
+                            </a>
+                        </div>
+                    </div>
+
+                    <!-- Sección Mi Perfil -->
+                    <div id="seccionPerfil" class="perfil-section">
+                        <h3><i class="fas fa-user me-2"></i>Mi Perfil</h3>
+                        
+                        <form id="formPerfil">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">DNI</label>
+                                        <input type="text" class="form-control" th:value="${cliente.dni}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Usuario</label>
+                                        <input type="text" class="form-control" th:value="${cliente.usuario}" readonly>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Nombre</label>
+                                        <input type="text" class="form-control" id="editNombre" th:value="${cliente.nombre}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Apellido</label>
+                                        <input type="text" class="form-control" id="editApellido" th:value="${cliente.apellido}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Correo</label>
+                                        <input type="email" class="form-control" id="editCorreo" th:value="${cliente.correo}">
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label class="form-label">Celular</label>
+                                        <input type="tel" class="form-control" id="editCelular" th:value="${cliente.celular}">
+                                    </div>
+                                </div>
+                            </div>
+                            
+                            <div class="text-end">
+                                <button type="button" class="btn btn-primary" onclick="actualizarPerfil()">
+                                    <i class="fas fa-save me-2"></i>Guardar Cambios
+                                </button>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Modal Detalle Pedido -->
+    <div class="modal fade" id="modalDetallePedido" tabindex="-1">
+        <div class="modal-dialog modal-lg">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-box me-2"></i>Detalle del Pedido</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body" id="contenidoDetallePedido">
+                    <!-- Contenido dinámico -->
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                    <button type="button" class="btn btn-success" id="btnDescargarPDF" onclick="descargarPDFActual()">
+                        <i class="fas fa-file-pdf me-1"></i>Descargar PDF
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+
+    <!-- Bootstrap 5 JS -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- SweetAlert2 -->
+    <script src="https://cdn.jsdelivr.net+/npm/sweetalert2@11"></script>
+    
+	<!-- Cliente (Dashboard) 
+	<script th:src="@{/js/clienteDashboard.js}"></script>-->
+	
+	<script>
+		// Variables globales - CORREGIDO
+		       let clienteDni = '[[${cliente.dni}]]';
+		       let pedidoActualId = null;
+		       
+		       // Debug: verificar que clienteDni se carga correctamente
+		       console.log('🔍 Cliente DNI cargado:', clienteDni);
+		       console.log('🔍 Tipo de clienteDni:', typeof clienteDni);
+		       console.log('🔍 Longitud clienteDni:', clienteDni.length);
+		       
+		       // Mostrar diferentes secciones
+		       function mostrarSeccion(seccion) {
+		           // Ocultar todas las secciones
+		           document.getElementById('seccionPedidos').style.display = 'none';
+		           document.getElementById('seccionPerfil').style.display = 'none';
+		           
+		           // Remover clase active de todos los enlaces
+		           document.querySelectorAll('.nav-link').forEach(link => {
+		               link.classList.remove('active');
+		           });
+		           
+		           // Mostrar sección seleccionada
+		           if (seccion === 'pedidos') {
+		               document.getElementById('seccionPedidos').style.display = 'block';
+		               document.querySelector('a[onclick="mostrarSeccion(\'pedidos\')"]').classList.add('active');
+		           } else if (seccion === 'perfil') {
+		               document.getElementById('seccionPerfil').style.display = 'block';
+		               document.querySelector('a[onclick="mostrarSeccion(\'perfil\')"]').classList.add('active');
+		           }
+		       }
+		       
+		       // 🆕 NUEVA FUNCIÓN: Descargar pedido
+		       function descargarPedido(pedidoId) {
+		           console.log('🚀 === INICIANDO DESCARGA ===');
+		           console.log('📋 Cliente DNI:', clienteDni);
+		           console.log('🆔 Pedido ID:', pedidoId);
+		           
+		           if (!clienteDni) {
+		               console.error('❌ Error: clienteDni no está definido');
+		               Swal.fire('Error', 'No se pudo obtener la información del cliente', 'error');
+		               return;
+		           }
+		           
+		           if (!pedidoId) {
+		               console.error('❌ Error: pedidoId no está definido');
+		               Swal.fire('Error', 'ID de pedido no válido', 'error');
+		               return;
+		           }
+		           
+		           const url = `/cliente-dashboard/${clienteDni}/pedido/${pedidoId}/descargar`;
+		           console.log('🔗 URL generada:', url);
+		           
+		           try {
+		               // Crear enlace temporal para descarga
+		               const link = document.createElement('a');
+		               link.href = url;
+		               link.download = `pedido_${pedidoId}.html`;
+		               link.style.display = 'none';
+		               
+		               document.body.appendChild(link);
+		               link.click();
+		               document.body.removeChild(link);
+		               
+		               console.log('✅ Descarga iniciada exitosamente');
+		               
+		               // Mostrar mensaje de confirmación
+		               Swal.fire({
+		                   icon: 'success',
+		                   title: '¡Descarga iniciada!',
+		                   text: 'El archivo del pedido se está descargando...',
+		                   timer: 2000,
+		                   showConfirmButton: false
+		               });
+		               
+		           } catch (error) {
+		               console.error('❌ Error al iniciar descarga:', error);
+		               Swal.fire('Error', 'No se pudo iniciar la descarga', 'error');
+		           }
+		       }
+		       
+		       // Ver detalle de pedido
+		       function verDetallePedido(pedidoId) {
+		           pedidoActualId = pedidoId;
+		           
+		           fetch(`/cliente-dashboard/api/${clienteDni}/pedido/${pedidoId}`)
+		           .then(response => response.json())
+		           .then(data => {
+		               if (data.success) {
+		                   mostrarDetallePedidoModal(data.pedido);
+		               } else {
+		                   Swal.fire('Error', data.message || 'Error al cargar el pedido', 'error');
+		               }
+		           })
+		           .catch(error => {
+		               console.error('Error:', error);
+		               Swal.fire('Error', 'Error al cargar el pedido', 'error');
+		           });
+		       }
+		       
+		       // Mostrar modal con detalle del pedido
+		       function mostrarDetallePedidoModal(pedido) {
+		           const contenido = document.getElementById('contenidoDetallePedido');
+		           
+		           let html = `
+		               <div class="row">
+		                   <div class="col-md-6">
+		                       <h6><i class="fas fa-info-circle me-2"></i>Información General</h6>
+		                       <p><strong>Código:</strong> ${pedido.codigo}</p>
+		                       <p><strong>Fecha:</strong> ${new Date(pedido.fecha).toLocaleDateString('es-PE')}</p>
+		                       <p><strong>Estado:</strong> <span class="badge bg-info">${pedido.estado?.descripcion || 'N/A'}</span></p>
+		                       <p><strong>Total:</strong> S/ ${pedido.total ? pedido.total.toFixed(2) : '0.00'}</p>
+		                   </div>
+		                   <div class="col-md-6">
+		                       <h6><i class="fas fa-user-cog me-2"></i>Personal Asignado</h6>
+		                       <p><strong>Técnico:</strong> ${pedido.tecnicoAsignadoId || 'No asignado'}</p>
+		                       <p><strong>Vendedor:</strong> ${pedido.vendedorAsignadoId || 'No asignado'}</p>
+		                   </div>
+		               </div>
+		               
+		               <div class="timeline mt-4">
+		                   <h6><i class="fas fa-clock me-2"></i>Historial del Pedido</h6>
+		                   <div class="timeline-item ${pedido.fechaCreacion ? 'completed' : ''}">
+		                       <div class="timeline-marker bg-primary"></div>
+		                       <div class="timeline-content">
+		                           <h6>Pedido Creado</h6>
+		                           <small>${pedido.fechaCreacion ? new Date(pedido.fechaCreacion).toLocaleString('es-PE') : 'Pendiente'}</small>
+		                       </div>
+		                   </div>
+		                   <div class="timeline-item ${pedido.fechaAsignacion ? 'completed' : ''}">
+		                       <div class="timeline-marker ${pedido.fechaAsignacion ? 'bg-info' : 'bg-light'}"></div>
+		                       <div class="timeline-content">
+		                           <h6>Asignado a Técnico</h6>
+		                           <small>${pedido.fechaAsignacion ? new Date(pedido.fechaAsignacion).toLocaleString('es-PE') : 'Pendiente'}</small>
+		                       </div>
+		                   </div>
+		                   <div class="timeline-item ${pedido.fechaEnvio ? 'completed' : ''}">
+		                       <div class="timeline-marker ${pedido.fechaEnvio ? 'bg-success' : 'bg-light'}"></div>
+		                       <div class="timeline-content">
+		                           <h6>Enviado/Completado</h6>
+		                           <small>${pedido.fechaEnvio ? new Date(pedido.fechaEnvio).toLocaleString('es-PE') : 'Pendiente'}</small>
+		                       </div>
+		                   </div>
+		               </div>
+		           `;
+		           
+		           contenido.innerHTML = html;
+		           new bootstrap.Modal(document.getElementById('modalDetallePedido')).show();
+		       }
+		       
+		       // Actualizar perfil
+		       function actualizarPerfil() {
+		           const datos = {
+		               nombre: document.getElementById('editNombre').value,
+		               apellido: document.getElementById('editApellido').value,
+		               correo: document.getElementById('editCorreo').value,
+		               celular: document.getElementById('editCelular').value
+		           };
+		           
+		           fetch(`/cliente-dashboard/api/${clienteDni}/actualizar-perfil`, {
+		               method: 'POST',
+		               headers: {
+		                   'Content-Type': 'application/json'
+		               },
+		               body: JSON.stringify(datos)
+		           })
+		           .then(response => response.json())
+		           .then(data => {
+		               if (data.success) {
+		                   Swal.fire('Éxito', 'Perfil actualizado correctamente', 'success');
+		               } else {
+		                   Swal.fire('Error', data.message || 'Error al actualizar perfil', 'error');
+		               }
+		           })
+		           .catch(error => {
+		               console.error('Error:', error);
+		               Swal.fire('Error', 'Error al actualizar perfil', 'error');
+		           });
+		       }
+		       
+		       // Descargar PDF del pedido actual
+		       function descargarPDFActual() {
+		           if (pedidoActualId) {
+		               window.open(`/cliente-dashboard/api/${clienteDni}/pedido/${pedidoActualId}/pdf`, '_blank');
+		           }
+		       }
+		       
+		       // Cerrar sesión
+		       function logout() {
+		           Swal.fire({
+		               title: 'Cerrar Sesión',
+		               text: '¿Estás seguro que deseas cerrar tu sesión?',
+		               icon: 'question',
+		               showCancelButton: true,
+		               confirmButtonText: 'Sí, cerrar sesión',
+		               cancelButtonText: 'Cancelar'
+		           }).then((result) => {
+		               if (result.isConfirmed) {
+		                   window.location.href = '/cliente-dashboard/logout';
+		               }
+		           });
+		       }
+		       
+		       // Inicialización
+		       document.addEventListener('DOMContentLoaded', function() {
+		           // Mostrar sección de pedidos por defecto
+		           mostrarSeccion('pedidos');
+		           
+		           // Verificar que todo esté bien cargado
+		           console.log('🎉 Dashboard del cliente cargado correctamente');
+		           console.log('🔍 clienteDni final:', clienteDni);
+		       });
+	</script>
+	
+</body>
+</html>

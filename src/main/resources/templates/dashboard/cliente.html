@@ -1,0 +1,680 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Panel - Akira Computer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        .sidebar {
+            min-height: 100vh;
+            background: linear-gradient(135deg, #6f42c1 0%, #0d6efd 100%);
+            color: white;
+        }
+        .sidebar .nav-link {
+            color: rgba(255,255,255,0.8);
+            padding: 12px 20px;
+            border-radius: 8px;
+            margin: 2px 0;
+        }
+        .sidebar .nav-link:hover, .sidebar .nav-link.active {
+            background: rgba(255,255,255,0.1);
+            color: white;
+        }
+        .main-content {
+            padding: 20px;
+            background-color: #f8f9fa;
+            min-height: 100vh;
+        }
+        .stats-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: transform 0.3s;
+        }
+        .stats-card:hover {
+            transform: translateY(-5px);
+        }
+        .table-container {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            margin-bottom: 20px;
+        }
+        .btn-new-pc {
+            background: linear-gradient(135deg, #6f42c1 0%, #0d6efd 100%);
+            border: none;
+            color: white;
+        }
+        .btn-new-pc:hover {
+            background: linear-gradient(135deg, #0d6efd 0%, #6f42c1 100%);
+            color: white;
+        }
+        .user-avatar {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #6f42c1 0%, #0d6efd 100%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: bold;
+        }
+        .order-timeline {
+            position: relative;
+            padding-left: 30px;
+        }
+        .order-timeline::before {
+            content: '';
+            position: absolute;
+            left: 8px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #dee2e6;
+        }
+        .timeline-item {
+            position: relative;
+            margin-bottom: 20px;
+        }
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -26px;
+            top: 8px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #6c757d;
+        }
+        .timeline-item.active::before {
+            background: #28a745;
+        }
+        .timeline-item.current::before {
+            background: #ffc107;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0.7); }
+            70% { box-shadow: 0 0 0 10px rgba(255, 193, 7, 0); }
+            100% { box-shadow: 0 0 0 0 rgba(255, 193, 7, 0); }
+        }
+        .order-card {
+            background: white;
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 20px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            transition: all 0.3s;
+        }
+        .order-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        .status-badge {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            border-radius: 20px;
+        }
+        .welcome-section {
+            background: linear-gradient(135deg, #6f42c1 0%, #0d6efd 100%);
+            color: white;
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+        }
+		.timeline {
+		    position: relative;
+		    padding-left: 30px;
+		}
+
+		.timeline-item {
+		    position: relative;
+		    padding-bottom: 20px;
+		}
+
+		.timeline-item:not(:last-child)::before {
+		    content: '';
+		    position: absolute;
+		    left: -21px;
+		    top: 20px;
+		    width: 2px;
+		    height: calc(100% - 10px);
+		    background-color: #dee2e6;
+		}
+
+		.timeline-marker {
+		    position: absolute;
+		    left: -25px;
+		    top: 5px;
+		    width: 12px;
+		    height: 12px;
+		    border-radius: 50%;
+		    border: 2px solid #fff;
+		    box-shadow: 0 0 0 2px #dee2e6;
+		}
+
+		.timeline-item.completed .timeline-marker {
+		    box-shadow: 0 0 0 2px #28a745;
+		}
+
+		.timeline-content h6 {
+		    margin-bottom: 5px;
+		    font-size: 0.9rem;
+		}
+
+		.timeline-content p {
+		    font-size: 0.8rem;
+		}
+
+		/* Estilos para mejorar las tarjetas del modal */
+		.card-header h6 {
+		    margin: 0;
+		    font-weight: 600;
+		}
+
+		.table-sm th,
+		.table-sm td {
+		    padding: 0.5rem;
+		    font-size: 0.9rem;
+		}
+
+		.badge {
+		    font-size: 0.8rem;
+		}
+		
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row">
+            <!-- Sidebar -->
+            <div class="col-md-3 col-lg-2 sidebar p-0">
+                <div class="p-3">
+                    <div class="text-center mb-4">
+                        <i class="fas fa-user-circle fa-2x mb-2"></i>
+                        <h5>Mi Panel</h5>
+                        <small th:text="${usuario.nombreCompleto}">Cliente Name</small>
+                    </div>
+                    
+                    <nav class="nav flex-column">
+                        <a class="nav-link active" href="#dashboard">
+                            <i class="fas fa-tachometer-alt me-2"></i>Dashboard
+                        </a>
+                        <a class="nav-link" href="#mis-pedidos">
+                            <i class="fas fa-shopping-cart me-2"></i>Mis Pedidos
+                        </a>
+                        <a class="nav-link" href="/armar-pc">
+                            <i class="fas fa-desktop me-2"></i>Armar mi PC
+                        </a>
+                        <a class="nav-link" href="/producto/lista">
+                            <i class="fas fa-laptop me-2"></i>Productos
+                        </a>
+                        <a class="nav-link" href="#soporte">
+                            <i class="fas fa-headset me-2"></i>Soporte
+                        </a>
+                        <hr class="my-3">
+                        <a class="nav-link" href="/auth/perfil">
+                            <i class="fas fa-user me-2"></i>Mi Perfil
+                        </a>
+                        <a class="nav-link" href="#" onclick="logout()">
+                            <i class="fas fa-sign-out-alt me-2"></i>Cerrar Sesión
+                        </a>
+                    </nav>
+                </div>
+            </div>
+
+            <!-- Main Content -->
+            <div class="col-md-9 col-lg-10 main-content">
+                <!-- Welcome Section -->
+                <div class="welcome-section">
+                    <div class="row align-items-center">
+                        <div class="col-md-8">
+                            <h2><i class="fas fa-hand-wave me-2"></i>¡Hola, <span th:text="${usuario.nombre}">Cliente</span>!</h2>
+                            <p class="mb-0">Bienvenido a tu panel personal. Aquí puedes revisar tus pedidos, armar tu PC ideal y explorar nuestros productos.</p>
+                        </div>
+                        <div class="col-md-4 text-center">
+                            <a href="/armar-pc" class="btn btn-light btn-lg">
+                                <i class="fas fa-desktop me-2"></i>Armar mi PC
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Stats Cards -->
+                <div class="row mb-4">
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-primary mb-2">
+                                <i class="fas fa-shopping-cart fa-2x"></i>
+                            </div>
+                            <h4 id="totalPedidos" th:text="${#lists.size(misPedidos)}">0</h4>
+                            <small class="text-muted">Total Pedidos</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-warning mb-2">
+                                <i class="fas fa-clock fa-2x"></i>
+                            </div>
+                            <h4 id="pedidosEnProceso">0</h4>
+                            <small class="text-muted">En Proceso</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-success mb-2">
+                                <i class="fas fa-check-circle fa-2x"></i>
+                            </div>
+                            <h4 id="pedidosCompletados">0</h4>
+                            <small class="text-muted">Completados</small>
+                        </div>
+                    </div>
+                    <div class="col-md-3 mb-3">
+                        <div class="stats-card text-center">
+                            <div class="text-info mb-2">
+                                <i class="fas fa-dollar-sign fa-2x"></i>
+                            </div>
+                            <h4 id="totalInvertido">S/ 0</h4>
+                            <small class="text-muted">Total Invertido</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Mis Pedidos -->
+                <div class="table-container">
+                    <div class="d-flex justify-content-between align-items-center mb-4">
+                        <h5><i class="fas fa-shopping-cart me-2"></i>Mis Pedidos</h5>
+                        <div>
+                            <a href="/armar-pc" class="btn btn-new-pc">
+                                <i class="fas fa-plus me-1"></i>Nuevo Pedido
+                            </a>
+                        </div>
+                    </div>
+
+                    <div class="row">
+                        <div th:each="pedido : ${misPedidos}" class="col-12 mb-4">
+                            <div class="order-card">
+                                <div class="row">
+                                    <div class="col-md-8">
+                                        <div class="d-flex align-items-center mb-3">
+                                            <h6 class="mb-0 me-3" th:text="'Pedido #' + ${pedido.id}">Pedido #001</h6>
+                                            <span th:switch="${pedido.estado.descripcion}" class="status-badge">
+                                                <span th:case="'PENDIENTE'" class="badge bg-warning">
+                                                    <i class="fas fa-clock me-1"></i>Pendiente
+                                                </span>
+                                                <span th:case="'ASIGNADO'" class="badge bg-info">
+                                                    <i class="fas fa-cogs me-1"></i>En Proceso
+                                                </span>
+                                                <span th:case="'ATENDIDO'" class="badge bg-primary">
+                                                    <i class="fas fa-check me-1"></i>Atendido
+                                                </span>
+                                                <span th:case="'CERRADO'" class="badge bg-success">
+                                                    <i class="fas fa-check-circle me-1"></i>Completado
+                                                </span>
+                                            </span>
+                                            <span class="badge bg-secondary ms-2" th:text="${pedido.tipoPedido}">ARMAR_PC</span>
+                                        </div>
+
+                                        <div class="row mb-3">
+                                            <div class="col-sm-6">
+                                                <strong class="text-success" th:text="'Total: S/ ' + ${pedido.total}">Total: S/ 1,500.00</strong>
+                                            </div>
+                                            <div class="col-sm-6">
+                                                <small class="text-muted" th:text="'Fecha: ' + ${#temporals.format(pedido.fecha, 'dd/MM/yyyy')}">Fecha: 01/01/2024</small>
+                                            </div>
+                                        </div>
+
+                                        <div th:if="${pedido.detallesComponentes}" class="mb-3">
+                                            <small class="text-muted">
+                                                <strong>Componentes:</strong>
+                                                <span th:text="${#strings.abbreviate(pedido.detallesComponentes, 150)}">Intel i7, RTX 4060, 16GB RAM...</span>
+                                            </small>
+                                        </div>
+
+                                        <div class="order-timeline">
+                                            <div class="timeline-item active">
+                                                <strong>Pedido Recibido</strong>
+                                                <div class="text-muted small" th:text="${#temporals.format(pedido.fecha, 'dd/MM/yyyy HH:mm')}">01/01/2024 10:30</div>
+                                            </div>
+                                            
+                                            <div th:class="${pedido.fechaAsignacion != null ? 'timeline-item active' : 'timeline-item'}">
+                                                <strong>Asignado a Técnico</strong>
+                                                <div th:if="${pedido.fechaAsignacion}" class="text-muted small" th:text="${#temporals.format(pedido.fechaAsignacion, 'dd/MM/yyyy HH:mm')}">02/01/2024 09:00</div>
+                                                <div th:unless="${pedido.fechaAsignacion}" class="text-muted small">Pendiente</div>
+                                            </div>
+                                            
+                                            <div th:class="${pedido.fechaAtencion != null ? 'timeline-item active' : (pedido.fechaAsignacion != null and pedido.fechaAtencion == null ? 'timeline-item current' : 'timeline-item')}">
+                                                <strong>Trabajo Completado</strong>
+                                                <div th:if="${pedido.fechaAtencion}" class="text-muted small" th:text="${#temporals.format(pedido.fechaAtencion, 'dd/MM/yyyy HH:mm')}">03/01/2024 16:30</div>
+                                                <div th:unless="${pedido.fechaAtencion}" class="text-muted small">En proceso</div>
+                                            </div>
+                                            
+                                            <div th:class="${pedido.fechaCierre != null ? 'timeline-item active' : 'timeline-item'}">
+                                                <strong>Entregado</strong>
+                                                <div th:if="${pedido.fechaCierre}" class="text-muted small" th:text="${#temporals.format(pedido.fechaCierre, 'dd/MM/yyyy HH:mm')}">04/01/2024 14:00</div>
+                                                <div th:unless="${pedido.fechaCierre}" class="text-muted small">Pendiente</div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="col-md-4">
+                                        <div class="text-center">
+                                            <div th:if="${pedido.tecnicoAsignado}" class="mb-3">
+                                                <div class="user-avatar mx-auto mb-2" style="width: 50px; height: 50px;" 
+                                                     th:text="${pedido.tecnicoAsignado.nombre.substring(0,1)}">T</div>
+                                                <small class="text-muted">
+                                                    <strong>Técnico Asignado:</strong><br>
+                                                    <span th:text="${pedido.tecnicoAsignado.nombreCompleto}">Carlos López</span>
+                                                </small>
+                                            </div>
+
+                                            <div th:if="${pedido.vendedorAsignado}" class="mb-3">
+                                                <small class="text-muted">
+                                                    <strong>Vendedor:</strong><br>
+                                                    <span th:text="${pedido.vendedorAsignado.nombreCompleto}">María García</span>
+                                                </small>
+                                            </div>
+
+                                            <div th:if="${pedido.observaciones}" class="mb-3">
+                                                <button class="btn btn-outline-info btn-sm" 
+                                                        th:onclick="'verObservaciones(`' + ${pedido.observaciones} + '`)'">
+                                                    <i class="fas fa-comment me-1"></i>Ver Observaciones
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div th:if="${#lists.isEmpty(misPedidos)}" class="text-center py-5 text-muted">
+                        <i class="fas fa-desktop fa-3x mb-3"></i>
+                        <h5>¡Comienza tu experiencia!</h5>
+                        <p>Aún no tienes pedidos. ¿Qué tal si armas tu PC ideal?</p>
+                        <a href="/armar-pc" class="btn btn-new-pc btn-lg">
+                            <i class="fas fa-desktop me-2"></i>Armar mi PC
+                        </a>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="row">
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card text-center">
+                            <i class="fas fa-desktop fa-2x text-primary mb-3"></i>
+                            <h6>Armar PC</h6>
+                            <p class="text-muted small">Configura tu PC ideal con nuestro asistente</p>
+                            <a href="/armar-pc" class="btn btn-outline-primary btn-sm">Comenzar</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card text-center">
+                            <i class="fas fa-laptop fa-2x text-success mb-3"></i>
+                            <h6>Productos</h6>
+                            <p class="text-muted small">Explora nuestro catálogo completo</p>
+                            <a href="/producto/lista" class="btn btn-outline-success btn-sm">Ver Catálogo</a>
+                        </div>
+                    </div>
+                    <div class="col-md-4 mb-3">
+                        <div class="stats-card text-center">
+                            <i class="fas fa-headset fa-2x text-warning mb-3"></i>
+                            <h6>Soporte</h6>
+                            <p class="text-muted small">Necesitas ayuda? Contáctanos</p>
+                            <a href="/contacto" class="btn btn-outline-warning btn-sm">Contactar</a>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Observaciones -->
+    <div class="modal fade" id="observacionesModal" tabindex="-1">
+        <div class="modal-dialog">
+            <div class="modal-content">
+                <div class="modal-header">
+                    <h5 class="modal-title">Observaciones del Técnico</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="alert alert-info">
+                        <i class="fas fa-tools me-2"></i>
+                        <strong>Trabajo realizado por nuestro técnico:</strong>
+                    </div>
+                    <p id="observacionesTexto"></p>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cerrar</button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Cargar estadísticas al iniciar
+        document.addEventListener('DOMContentLoaded', function() {
+            calcularEstadisticas();
+        });
+
+        function calcularEstadisticas() {
+            const pedidos = /*[[${misPedidos}]]*/ [];
+            
+            let enProceso = 0;
+            let completados = 0;
+            let totalInvertido = 0;
+
+            pedidos.forEach(pedido => {
+                totalInvertido += pedido.total;
+                
+                switch(pedido.estado.descripcion) {
+                    case 'PENDIENTE':
+                    case 'ASIGNADO':
+                    case 'ATENDIDO':
+                        enProceso++;
+                        break;
+                    case 'CERRADO':
+                        completados++;
+                        break;
+                }
+            });
+
+            document.getElementById('pedidosEnProceso').textContent = enProceso;
+            document.getElementById('pedidosCompletados').textContent = completados;
+            document.getElementById('totalInvertido').textContent = 'S/ ' + totalInvertido.toFixed(2);
+        }
+
+        function verObservaciones(observaciones) {
+            document.getElementById('observacionesTexto').textContent = observaciones;
+            new bootstrap.Modal(document.getElementById('observacionesModal')).show();
+        }
+
+        function logout() {
+            if (confirm('¿Está seguro que desea cerrar sesión?')) {
+                fetch('/auth/logout', {
+                    method: 'POST'
+                }).then(() => {
+                    window.location.href = '/';
+                });
+            }
+        }
+		
+		// REEMPLAZAR la función mostrarDetallePedidoModal existente con esta versión mejorada
+		function mostrarDetallePedidoModal(pedido) {
+		    const contenido = document.getElementById('contenidoDetallePedido');
+		    
+		    // Determinar el color del estado
+		    const estadoColor = pedido.estado?.descripcion === 'Completado' ? 'success' :
+		                       pedido.estado?.descripcion === 'En Proceso' ? 'info' :
+		                       pedido.estado?.descripcion === 'Pendiente' ? 'warning' : 'secondary';
+		    
+		    let html = `
+		        <div class="row mb-4">
+		            <div class="col-md-6">
+		                <div class="card h-100">
+		                    <div class="card-header bg-primary text-white">
+		                        <h6 class="mb-0"><i class="fas fa-info-circle me-2"></i>Información General</h6>
+		                    </div>
+		                    <div class="card-body">
+		                        <p><strong>Código del Pedido:</strong> <span class="text-primary">${pedido.codigo || pedido.id || 'No disponible'}</span></p>
+		                        <p><strong>Fecha:</strong> ${pedido.fecha ? new Date(pedido.fecha).toLocaleDateString('es-PE') : 'No disponible'}</p>
+		                        <p><strong>Estado:</strong> <span class="badge bg-${estadoColor}">${pedido.estado?.descripcion || 'No definido'}</span></p>
+		                        <p><strong>Total:</strong> <span class="text-success fw-bold fs-5">S/ ${pedido.total ? pedido.total.toFixed(2) : '0.00'}</span></p>
+		                        <p><strong>Tipo:</strong> <span class="badge bg-info">${pedido.tipoPedido || 'Producto Completo'}</span></p>
+		                    </div>
+		                </div>
+		            </div>
+		            <div class="col-md-6">
+		                <div class="card h-100">
+		                    <div class="card-header bg-secondary text-white">
+		                        <h6 class="mb-0"><i class="fas fa-user-cog me-2"></i>Personal Asignado</h6>
+		                    </div>
+		                    <div class="card-body">
+		                        <p><strong>Técnico:</strong> ${pedido.tecnicoAsignadoId || pedido.tecnico || 'No asignado'}</p>
+		                        <p><strong>Vendedor:</strong> ${pedido.vendedorAsignadoId || pedido.vendedor || 'No asignado'}</p>
+		                        <p><strong>Registrado por:</strong> ${pedido.vendedor || 'Sistema'}</p>
+		                    </div>
+		                </div>
+		            </div>
+		        </div>
+		    `;
+		    
+		    // Sección de productos/componentes
+		    html += `
+		        <div class="card mb-4">
+		            <div class="card-header bg-success text-white">
+		                <h6 class="mb-0"><i class="fas fa-box me-2"></i>Productos/Componentes Seleccionados</h6>
+		            </div>
+		            <div class="card-body">
+		    `;
+		    
+		    // Mostrar detalles de productos si existen
+		    if (pedido.detalles && pedido.detalles.length > 0) {
+		        html += `
+		            <div class="table-responsive">
+		                <table class="table table-sm table-hover">
+		                    <thead class="table-light">
+		                        <tr>
+		                            <th>Producto</th>
+		                            <th>Cantidad</th>
+		                            <th>Precio Unit.</th>
+		                            <th>Subtotal</th>
+		                        </tr>
+		                    </thead>
+		                    <tbody>
+		        `;
+		        
+		        pedido.detalles.forEach(detalle => {
+		            const subtotal = (detalle.cantidad * detalle.precio);
+		            html += `
+		                <tr>
+		                    <td>
+		                        <strong>${detalle.producto?.nombre || 'Producto'}</strong><br>
+		                        <small class="text-muted">${detalle.producto?.categoria?.nombre || ''} ${detalle.producto?.marca?.nombre ? '- ' + detalle.producto.marca.nombre : ''}</small>
+		                    </td>
+		                    <td><span class="badge bg-light text-dark">${detalle.cantidad}</span></td>
+		                    <td>S/ ${detalle.precio ? detalle.precio.toFixed(2) : '0.00'}</td>
+		                    <td><strong>S/ ${subtotal.toFixed(2)}</strong></td>
+		                </tr>
+		            `;
+		        });
+		        
+		        html += `
+		                    </tbody>
+		                </table>
+		            </div>
+		        `;
+		    } else if (pedido.detallesComponentes) {
+		        // Si no hay detalles estructurados, mostrar texto de componentes
+		        html += `
+		            <div class="alert alert-info">
+		                <h6><i class="fas fa-list me-2"></i>Descripción:</h6>
+		                <div style="white-space: pre-line; font-family: monospace; font-size: 0.9em;">
+		                    ${pedido.detallesComponentes}
+		                </div>
+		            </div>
+		        `;
+		    } else {
+		        html += `
+		            <div class="alert alert-warning">
+		                <i class="fas fa-exclamation-triangle me-2"></i>
+		                No hay información detallada de productos disponible para este pedido.
+		            </div>
+		        `;
+		    }
+		    
+		    html += `
+		            </div>
+		        </div>
+		    `;
+		    
+		    // Timeline/Historial
+		    html += `
+		        <div class="card">
+		            <div class="card-header bg-info text-white">
+		                <h6 class="mb-0"><i class="fas fa-clock me-2"></i>Historial del Pedido</h6>
+		            </div>
+		            <div class="card-body">
+		                <div class="timeline">
+		    `;
+		    
+		    // Línea de tiempo básica
+		    const fechaCreacion = pedido.fecha;
+		    if (fechaCreacion) {
+		        html += `
+		            <div class="timeline-item completed">
+		                <div class="timeline-marker bg-success"></div>
+		                <div class="timeline-content">
+		                    <h6>Pedido Creado</h6>
+		                    <p class="text-muted mb-0">${new Date(fechaCreacion).toLocaleString('es-PE')}</p>
+		                </div>
+		            </div>
+		        `;
+		    }
+		    
+		    if (pedido.estado?.descripcion === 'En Proceso') {
+		        html += `
+		            <div class="timeline-item completed">
+		                <div class="timeline-marker bg-info"></div>
+		                <div class="timeline-content">
+		                    <h6>En Proceso</h6>
+		                    <p class="text-muted mb-0">El pedido está siendo procesado</p>
+		                </div>
+		            </div>
+		        `;
+		    }
+		    
+		    if (pedido.estado?.descripcion === 'Completado') {
+		        html += `
+		            <div class="timeline-item completed">
+		                <div class="timeline-marker bg-success"></div>
+		                <div class="timeline-content">
+		                    <h6>Completado</h6>
+		                    <p class="text-muted mb-0">Pedido finalizado exitosamente</p>
+		                </div>
+		            </div>
+		        `;
+		    }
+		    
+		    html += `
+		                </div>
+		            </div>
+		        </div>
+		    `;
+		    
+		    // Insertar el HTML en el modal
+		    contenido.innerHTML = html;
+		    
+		    // Mostrar el modal
+		    const modal = new bootstrap.Modal(document.getElementById('modalDetallePedido'));
+		    modal.show();
+		}
+    </script>
+</body>
+</html>

@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Nosotros - AkiraComputer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+    <!-- Include Header -->
+    <div th:replace="~{header :: header}"></div>
+
+    <!-- Nosotros Section -->
+    <section class="nosotros-section">
+        <div class="container">
+            <div class="row justify-content-center">
+                <div class="col-lg-10">
+                    <h1 class="nosotros-title">¿QUIENES SOMOS?</h1>
+                    
+                    <brp class="nosotros-text">
+						En AkiraComputer, nos apasiona la tecnología.
+						Somos una empresa especializada en la venta de computadoras, componentes y equipos tecnológicos de alto rendimiento. Desde nuestros inicios, nuestro objetivo ha sido claro: brindar soluciones tecnológicas confiables, personalizadas y al alcance de todos. </br></br>
+						Contamos con un equipo de expertos que no solo conoce cada componente, sino que también entiende las necesidades reales de nuestros clientes, ya sean gamers, profesionales, estudiantes o empresas. Ofrecemos asesoría personalizada para armar tu PC ideal, según tu presupuesto y objetivos.</br></br>
+
+						En AkiraComputer, trabajamos con marcas líderes en el mercado y garantizamos productos 100% originales, con garantía y soporte técnico. Nuestro compromiso es ofrecer una experiencia de compra segura, transparente y satisfactoria, tanto en tienda física como en nuestra plataforma online.
+
+						Somos más que una tienda de computadoras. Somos tu aliado tecnológico.
+                    </p>
+                </div>
+            </div>
+            
+            <!-- Logo Section -->
+            <div class="logo-section">
+                <img th:src="@{/images/logo_us.png}" alt="AkiraComputer Logo" class="img-fluid">
+            </div>
+        </div>
+    </section>
+
+    <!-- Vision Section -->
+    <section class="vision-section">
+        <div class="container">
+            <div class="row">
+                <div class="col-lg-6 mb-4">
+                    <div class="vision-card">
+                        <div class="vision-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h3 class="vision-title">VISIÓN</h3>
+                        <p class="vision-text">
+							Brindar soluciones tecnológicas de calidad a través de la venta de computadoras y componentes confiables.</br>
+							Ofrecemos asesoría personalizada y productos innovadores que se adaptan a las necesidades de cada cliente.
+							Nuestro compromiso es garantizar una experiencia de compra segura, accesible y satisfactoria.
+                        </p>
+                    </div>
+                </div>
+                
+                <div class="col-lg-6 mb-4">
+                    <div class="vision-card">
+                        <div class="vision-icon">
+                            <i class="fas fa-user"></i>
+                        </div>
+                        <h3 class="vision-title">MISIÓN</h3>
+                        <p class="vision-text">
+							Ser la empresa líder en tecnología a nivel nacional, reconocida por su innovación, confianza y atención al cliente.</br>
+							Impulsar la transformación digital de hogares, negocios y profesionales con equipos de alto rendimiento.
+							Crecer de la mano con nuestros clientes, aportando valor y tecnología a cada proyecto.
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </section>
+	
+	<div class="map">
+		<iframe src="https://www.google.com/maps/embed?pb=!1m18!1m12!1m3!1d3903.507815489904!2d-77.07303862579629!3d-11.939301939907436!2m3!1f0!2f0!3f0!3m2!1i1024!2i768!4f13.1!3m3!1m2!1s0x9105d188395ec467%3A0x64c79aff74fb8a99!2sAlpha%20Technology!5e0!3m2!1ses-419!2spe!4v1750622850278!5m2!1ses-419!2spe" width="600" height="450" style="border:0;" allowfullscreen="" loading="lazy" referrerpolicy="no-referrer-when-downgrade"></iframe>
+    </div>
+
+    <!-- Include Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+
+</body>
+</html>

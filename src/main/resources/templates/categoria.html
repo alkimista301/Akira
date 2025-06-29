@@ -1,0 +1,118 @@
+<!DOCTYPE html>
+<html lang="es" xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Categorías - AkiraComputer</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <link th:href="@{/css/styles.css}" rel="stylesheet">
+</head>
+<body>
+    <!-- Include Header -->
+    <div th:replace="~{header :: header}"></div>
+
+    <!-- Breadcrumb -->
+    <section class="breadcrumb-section">
+        <div class="container">
+            <nav aria-label="breadcrumb"> 
+                <ol class="breadcrumb">
+                    <li class="breadcrumb-item"><a href="/">Inicio</a></li>
+                    <li class="breadcrumb-item active">Categorías</li>
+                </ol>
+            </nav>
+        </div>
+    </section>
+
+    <!-- Categorías Section -->
+    <section class="productos-section">
+        <div class="container">
+            <div class="text-center mb-5">
+                <p class="categorias-title">Categorías</p>
+                <h1 class="productos-title">Explore nuestra gama de productos</h1>
+                <p class="lead">Encuentra exactamente lo que necesitas para tu setup ideal</p>
+            </div>
+			
+            
+			<div class="category-grid">
+                <div th:each="categoria : ${categorias}" class="category-card">
+                    <a th:href="@{/categoria/{id}(id=${categoria.id})}" class="text-decoration-none">
+                        <!-- Imagen de la categoría -->
+                        <div th:if="${categoria.imagenUrl}" class="category-image-container">
+                            <img th:src="@{${categoria.imagenUrl}}" 
+                                 th:alt="${categoria.nombre}" 
+                                 class="category-image"
+                                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';">
+                            <!-- Fallback si no se puede cargar la imagen -->
+                            <div class="category-fallback" style="display: none;">
+                                <i class="fas fa-microchip"></i>
+                            </div>
+                        </div>
+                        
+                        <!-- Fallback si no hay URL de imagen -->
+                        <div th:unless="${categoria.imagenUrl}" class="category-fallback">
+                            <i class="fas fa-microchip"></i>
+                        </div>
+                        
+                        <!-- Overlay con información -->
+                        <div class="category-overlay">
+                            <h3 class="category-title" th:text="${categoria.nombre}">CATEGORÍA</h3>
+                            <p class="category-description" th:text="${categoria.descripcion}">Descripción de la categoría</p>
+                            <div class="category-info">
+                                <small th:if="${categoria.estante}" class="badge bg-light text-dark">
+                                    <i class="fas fa-map-marker-alt me-1"></i>
+                                    Estante: <span th:text="${categoria.estante}">A1</span>
+                                </small>
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            </div>
+
+            <!-- Acciones rápidas -->
+            <div class="row mt-5">
+                <div class="col-md-6 mb-3">
+                    <div class="action-card">
+                        <div class="d-flex align-items-center">
+                            <div class="action-icon me-3">
+                                <i class="fas fa-desktop fa-2x text-primary"></i>
+                            </div>
+                            <div>
+                                <h5>¿Necesitas armar una PC?</h5>
+                                <p class="mb-2 text-muted">Te guiamos paso a paso con nuestro configurador</p>
+                                <a href="/armar-pc" class="btn btn-primary btn-sm">
+                                    <i class="fas fa-tools me-1"></i>Configurar PC
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-6 mb-3">
+                    <div class="action-card">
+                        <div class="d-flex align-items-center">
+                            <div class="action-icon me-3">
+                                <i class="fas fa-laptop fa-2x text-success"></i>
+                            </div>
+                            <div>
+                                <h5>¿Buscas algo específico?</h5>
+                                <p class="mb-2 text-muted">Explora todos nuestros productos</p>
+                                <a href="/categorias" class="btn btn-success btn-sm">
+                                    <i class="fas fa-search me-1"></i>Ver Productos
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+			
+			<div class="banner">
+		        <img th:src="@{/images/banner.png}" alt="AkiraComputer Logo" class="img-fluid" style="width: 100%">
+		    </div>
+				
+        </div>
+    </section>
+
+    <!-- Include Footer -->
+    <div th:replace="~{footer :: footer}"></div>
+</body>
+</html>
