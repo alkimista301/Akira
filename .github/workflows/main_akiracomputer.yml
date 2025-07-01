@@ -19,7 +19,7 @@ jobs:
           java-version: '17'
           distribution: 'microsoft'
       - name: Compilar con Maven (omitir pruebas)
-        run: mvn clean install -DskipTests
+        run: mvn clean package -DskipTests -Dmaven.test.skip=true
       - name: Upload artifact for deployment job
         uses: actions/upload-artifact@v4
         with:
